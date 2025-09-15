@@ -143,7 +143,6 @@ page 80500 "Application Registry"
         LicenseManagement: Codeunit "License Management";
     begin
         // Initialize licensing system if needed
-        if not LicenseManagement.CLI_ShowSystemStatus() then
-            LicenseManagement.InitializeLicensingSystem();
+        LicenseManagement.InitializeLicensingSystem();
     end;
 }

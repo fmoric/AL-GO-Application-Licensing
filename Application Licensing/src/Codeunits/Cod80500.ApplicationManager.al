@@ -117,7 +117,6 @@ codeunit 80500 "Application Manager"
     var
         ApplicationRegistry: Record "Application Registry";
         LicenseRegistry: Record "License Registry";
-        ConfirmManagement: Codeunit "Confirm Management";
     begin
         if not ApplicationRegistry.Get(AppId) then
             Error('Application with ID %1 does not exist.', AppId);
@@ -125,8 +124,8 @@ codeunit 80500 "Application Manager"
         // Check for existing licenses
         LicenseRegistry.SetRange("App ID", AppId);
         if not LicenseRegistry.IsEmpty then
-            if not ConfirmManagement.GetResponseOrDefault(
-                StrSubstNo('Application %1 has associated licenses. Delete all licenses and the application?', ApplicationRegistry."App Name"), false) then
+            if not Confirm(
+                StrSubstNo('Application %1 has associated licenses. Delete all licenses and the application?', ApplicationRegistry."App Name")) then
                 exit(false);
 
         // Delete all associated licenses

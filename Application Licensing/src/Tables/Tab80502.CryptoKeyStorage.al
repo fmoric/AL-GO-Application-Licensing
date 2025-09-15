@@ -87,10 +87,8 @@ table 80502 "Crypto Key Storage"
     end;
 
     trigger OnDelete()
-    var
-        ConfirmManagement: Codeunit "Confirm Management";
     begin
-        if not ConfirmManagement.GetResponseOrDefault(StrSubstNo('Are you sure you want to delete the cryptographic key %1?', "Key ID"), false) then
+        if not Confirm(StrSubstNo('Are you sure you want to delete the cryptographic key %1?', "Key ID")) then
             Error('');
     end;
 }

@@ -113,11 +113,10 @@ page 80502 "License Registry"
                 trigger OnAction()
                 var
                     LicenseGenerator: Codeunit "License Generator";
-                    ConfirmManagement: Codeunit "Confirm Management";
                 begin
-                    if ConfirmManagement.GetResponseOrDefault(
+                    if Confirm(
                         StrSubstNo('Are you sure you want to revoke license %1 for customer %2?', 
-                                  Rec."License ID", Rec."Customer Name"), false) then begin
+                                  Rec."License ID", Rec."Customer Name")) then begin
                         if LicenseGenerator.RevokeLicense(Rec."License ID") then begin
                             Message('License revoked successfully.');
                             CurrPage.Update(false);
