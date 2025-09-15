@@ -265,7 +265,6 @@ codeunit 80503 "License Management"
     var
         LicenseRegistry: Record "License Registry";
         TempBlob: Codeunit "Temp Blob";
-        FileMgt: Codeunit "File Management";
         InStream: InStream;
     begin
         if not LicenseRegistry.Get(LicenseId) then

@@ -8,14 +8,6 @@ codeunit 80501 "Crypto Key Manager"
     begin
     end;
 
-    var
-        RSAKeySize: Integer;
-
-    trigger OnAfterInitialization()
-    begin
-        RSAKeySize := 2048; // RSA-2048 as specified in requirements
-    end;
-
     /// <summary>
     /// Generates a new RSA key pair for license signing.
     /// </summary>
