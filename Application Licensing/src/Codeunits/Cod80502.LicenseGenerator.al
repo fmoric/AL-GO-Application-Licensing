@@ -22,7 +22,7 @@ codeunit 80502 "License Generator"
         ApplicationRegistry: Record "Application Registry";
         LicenseRegistry: Record "License Registry";
         CryptoKeyManager: Codeunit "Crypto Key Manager";
-        TempBlob: Codeunit "Temp Blob";
+        TempBlob: Codeunit System.Utilities."Temp Blob";
         LicenseOutStream: OutStream;
         KeyId: Code[20];
         PublicKey: Text;

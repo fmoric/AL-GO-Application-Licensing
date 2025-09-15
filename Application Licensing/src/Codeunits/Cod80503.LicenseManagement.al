@@ -264,7 +264,7 @@ codeunit 80503 "License Management"
     procedure ExportLicenseFile(LicenseId: Guid; FileName: Text)
     var
         LicenseRegistry: Record "License Registry";
-        TempBlob: Codeunit "Temp Blob";
+        TempBlob: Codeunit System.Utilities."Temp Blob";
         InStream: InStream;
     begin
         if not LicenseRegistry.Get(LicenseId) then
