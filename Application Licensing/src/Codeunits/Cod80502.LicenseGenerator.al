@@ -177,7 +177,6 @@ codeunit 80502 "License Generator"
     /// </summary>
     local procedure GenerateDigitalSignature(Content: Text; PrivateKey: Text): Text
     var
-        CryptographyManagement: Codeunit "Cryptography Management";
         Signature: Text;
     begin
         // Note: This is a simplified mock implementation
@@ -240,7 +239,6 @@ codeunit 80502 "License Generator"
     /// </summary>
     local procedure GetContentHash(Content: Text): Text
     var
-        CryptographyManagement: Codeunit "Cryptography Management";
         HashValue: Text;
     begin
         // Simplified hash implementation
@@ -251,8 +249,8 @@ codeunit 80502 "License Generator"
     /// <summary>
     /// Gets a newline character for file formatting.
     /// </summary>
-    local procedure NewLine(): Text[1]
+    local procedure NewLine(): Char
     begin
-        exit('\n');
+        exit(10);
     end;
 }

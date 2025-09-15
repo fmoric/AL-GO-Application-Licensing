@@ -251,9 +251,9 @@ codeunit 80503 "License Management"
     /// <summary>
     /// Gets a newline character for formatting.
     /// </summary>
-    local procedure NewLine(): Text[1]
+    local procedure NewLine(): Char
     begin
-        exit('\n');
+        exit(10);
     end;
 
     /// <summary>
@@ -265,7 +265,6 @@ codeunit 80503 "License Management"
     var
         LicenseRegistry: Record "License Registry";
         TempBlob: Codeunit "Temp Blob";
-        FileMgt: Codeunit "File Management";
         InStream: InStream;
     begin
         if not LicenseRegistry.Get(LicenseId) then

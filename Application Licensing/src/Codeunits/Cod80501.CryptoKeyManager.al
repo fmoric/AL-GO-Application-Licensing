@@ -8,14 +8,6 @@ codeunit 80501 "Crypto Key Manager"
     begin
     end;
 
-    var
-        RSAKeySize: Integer;
-
-    trigger OnAfterInitialization()
-    begin
-        RSAKeySize := 2048; // RSA-2048 as specified in requirements
-    end;
-
     /// <summary>
     /// Generates a new RSA key pair for license signing.
     /// </summary>
@@ -26,7 +18,6 @@ codeunit 80501 "Crypto Key Manager"
     procedure GenerateKeyPair(KeyId: Code[20]; KeyType: Enum "Crypto Key Type"; ExpiresDate: Date): Boolean
     var
         CryptoKeyStorage: Record "Crypto Key Storage";
-        CryptographyManagement: Codeunit "Cryptography Management";
         TempBlob: Codeunit "Temp Blob";
         PublicKeyOutStream: OutStream;
         PrivateKeyOutStream: OutStream;
@@ -164,7 +155,6 @@ codeunit 80501 "Crypto Key Manager"
     /// <returns>True if generation was successful.</returns>
     local procedure GenerateRSAKeyPair(var PublicKey: Text; var PrivateKey: Text): Boolean
     var
-        CryptographyManagement: Codeunit "Cryptography Management";
         RandomGuid: Guid;
     begin
         // Note: This is a simplified mock implementation for demonstration

@@ -232,8 +232,8 @@ page 80503 "License Generation"
     /// <summary>
     /// Gets a newline character for formatting.
     /// </summary>
-    local procedure NewLine(): Text[1]
+    local procedure NewLine(): Char
     begin
-        exit('\n');
+        exit(10);
     end;
 }

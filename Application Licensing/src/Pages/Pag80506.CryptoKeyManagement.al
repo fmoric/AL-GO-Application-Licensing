@@ -125,9 +125,8 @@ page 80506 "Crypto Key Management"
                 trigger OnAction()
                 var
                     CryptoKeyManager: Codeunit "Crypto Key Manager";
-                    ConfirmManagement: Codeunit "Confirm Management";
                 begin
-                    if ConfirmManagement.GetResponseOrDefault(
+                    if Confirm(
                         StrSubstNo('Are you sure you want to deactivate key %1?', Rec."Key ID"), false) then begin
                         if CryptoKeyManager.DeactivateKey(Rec."Key ID") then begin
                             Message('Key deactivated successfully.');
@@ -179,8 +178,8 @@ page 80506 "Crypto Key Management"
     /// <summary>
     /// Gets a newline character for formatting.
     /// </summary>
-    local procedure NewLine(): Text[1]
+    local procedure NewLine(): Char
     begin
-        exit('\n');
+        exit(10);
     end;
 }
