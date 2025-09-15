@@ -18,7 +18,7 @@ codeunit 80501 "Crypto Key Manager"
     procedure GenerateKeyPair(KeyId: Code[20]; KeyType: Enum "Crypto Key Type"; ExpiresDate: Date): Boolean
     var
         CryptoKeyStorage: Record "Crypto Key Storage";
-        TempBlob: Codeunit "Temp Blob";
+        TempBlob: Codeunit System.Utilities."Temp Blob";
         PublicKeyOutStream: OutStream;
         PrivateKeyOutStream: OutStream;
         PublicKey: Text;
@@ -63,7 +63,7 @@ codeunit 80501 "Crypto Key Manager"
     procedure GetActiveSigningKey(var KeyId: Code[20]; var PublicKey: Text; var PrivateKey: Text): Boolean
     var
         CryptoKeyStorage: Record "Crypto Key Storage";
-        TempBlob: Codeunit "Temp Blob";
+        TempBlob: Codeunit System.Utilities."Temp Blob";
         InStream: InStream;
     begin
         CryptoKeyStorage.SetRange("Key Type", CryptoKeyStorage."Key Type"::"Signing Key");
@@ -102,7 +102,7 @@ codeunit 80501 "Crypto Key Manager"
     procedure GetPublicKey(KeyId: Code[20]; var PublicKey: Text): Boolean
     var
         CryptoKeyStorage: Record "Crypto Key Storage";
-        TempBlob: Codeunit "Temp Blob";
+        TempBlob: Codeunit System.Utilities."Temp Blob";
         InStream: InStream;
     begin
         if not CryptoKeyStorage.Get(KeyId) then
