@@ -42,7 +42,7 @@ page 80502 "License Registry"
                     ApplicationArea = All;
                     ToolTip = 'Specifies when the license expires.';
                     Style = Attention;
-                    StyleExpr = Rec."Valid To" < Today;
+                    StyleExpr = ValidToExpr;
                 }
                 field(Features; Rec.Features)
                 {
@@ -98,7 +98,7 @@ page 80502 "License Registry"
                         Message('License validation successful.')
                     else
                         Message('License validation failed: %1', Rec."Validation Result");
-                    
+
                     CurrPage.Update(false);
                 end;
             }
@@ -115,7 +115,7 @@ page 80502 "License Registry"
                     LicenseGenerator: Codeunit "License Generator";
                 begin
                     if Confirm(
-                        StrSubstNo('Are you sure you want to revoke license %1 for customer %2?', 
+                        StrSubstNo('Are you sure you want to revoke license %1 for customer %2?',
                                   Rec."License ID", Rec."Customer Name"), false) then begin
                         if LicenseGenerator.RevokeLicense(Rec."License ID") then begin
                             Message('License revoked successfully.');
@@ -183,5 +183,12 @@ page 80502 "License Registry"
     trigger OnAfterGetCurrRecord()
     begin
         Rec.CalcFields("App Name");
+        if Rec."Valid To" < Today then
+            ValidToExpr := Format(PageStyle::Unfavorable)
+        else
+            ValidToExpr := Format(PageStyle::None);
     end;
+
+    var
+        ValidToExpr: Text;
 }

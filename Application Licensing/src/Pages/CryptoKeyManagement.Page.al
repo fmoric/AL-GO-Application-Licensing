@@ -48,7 +48,7 @@ page 80506 "Crypto Key Management"
                     ApplicationArea = All;
                     ToolTip = 'Specifies when the key expires.';
                     Style = Attention;
-                    StyleExpr = (Rec."Expires Date" <> 0D) and (Rec."Expires Date" < Today);
+                    StyleExpr = ValidToExpr;
                 }
                 field("Usage Count"; Rec."Usage Count")
                 {
@@ -83,7 +83,7 @@ page 80506 "Crypto Key Management"
                 begin
                     KeyId := StrSubstNo('SIGN-KEY-%1', Format(CurrentDateTime, 0, '<Year4><Month,2><Day,2><Hours24><Minutes,2>'));
                     ExpirationDate := CalcDate('<+5Y>', Today);
-                    
+
                     if CryptoKeyManager.GenerateKeyPair(CopyStr(KeyId, 1, 20), "Crypto Key Type"::"Signing Key", ExpirationDate) then begin
                         Message('Signing key generated successfully: %1', KeyId);
                         CurrPage.Update(false);
@@ -106,7 +106,7 @@ page 80506 "Crypto Key Management"
                 begin
                     KeyId := StrSubstNo('VALID-KEY-%1', Format(CurrentDateTime, 0, '<Year4><Month,2><Day,2><Hours24><Minutes,2>'));
                     ExpirationDate := CalcDate('<+5Y>', Today);
-                    
+
                     if CryptoKeyManager.GenerateKeyPair(CopyStr(KeyId, 1, 20), "Crypto Key Type"::"Validation Key", ExpirationDate) then begin
                         Message('Validation key generated successfully: %1', KeyId);
                         CurrPage.Update(false);
@@ -152,17 +152,17 @@ page 80506 "Crypto Key Management"
                     StatusMessage: Text;
                 begin
                     StatusMessage := 'Cryptographic System Status:' + NewLine() + NewLine();
-                    
+
                     if CryptoKeyManager.IsSigningKeyAvailable() then
                         StatusMessage += 'Signing Key: Available' + NewLine()
                     else
                         StatusMessage += 'Signing Key: NOT AVAILABLE' + NewLine();
-                    
+
                     StatusMessage += StrSubstNo('Total Keys: %1', Rec.Count) + NewLine();
-                    
+
                     Rec.SetRange(Active, true);
                     StatusMessage += StrSubstNo('Active Keys: %1', Rec.Count) + NewLine();
-                    
+
                     Rec.SetRange(Active);
                     Rec.SetRange("Key Type", Rec."Key Type"::"Signing Key");
                     StatusMessage += StrSubstNo('Signing Keys: %1', Rec.Count) + NewLine();
@@ -174,12 +174,23 @@ page 80506 "Crypto Key Management"
             }
         }
     }
-
+    trigger OnAfterGetCurrRecord()
+    begin
+        if Rec."Expires Date" < Today then
+            ValidToExpr := Format(PageStyle::Unfavorable)
+        else
+            ValidToExpr := Format(PageStyle::None);
+    end;
     /// <summary>
     /// Gets a newline character for formatting.
     /// </summary>
-    local procedure NewLine(): Char
+    local procedure NewLine(): Text
+    var
+        TypeHelper: Codeunit "Type Helper";
     begin
-        exit(10);
+        exit(TypeHelper.NewLine());
     end;
+
+    var
+        ValidToExpr: Text;
 }

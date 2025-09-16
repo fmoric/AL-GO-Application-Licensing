@@ -27,7 +27,6 @@ table 80501 "License Registry"
         field(3; "App Name"; Text[100])
         {
             Caption = 'Application Name';
-            DataClassification = SystemMetadata;
             CalcFormula = lookup("Application Registry"."App Name" where("App ID" = field("App ID")));
             Editable = false;
             FieldClass = FlowField;

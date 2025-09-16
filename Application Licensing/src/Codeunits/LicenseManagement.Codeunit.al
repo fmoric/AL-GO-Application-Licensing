@@ -1,3 +1,6 @@
+namespace ApplicationLicensing.Codeunit;
+
+using ApplicationLicensing.Enums;
 /// <summary>
 /// Codeunit License Management (ID 80503).
 /// Main coordinator for all licensing operations and CLI interface.
@@ -64,7 +67,7 @@ codeunit 80503 "License Management"
         OutputText: Text;
     begin
         OutputText := 'Registered Applications:' + NewLine() + NewLine();
-        
+
         if ApplicationRegistry.FindSet() then begin
             repeat
                 OutputText += StrSubstNo('ID: %1' + NewLine() +
@@ -160,7 +163,7 @@ codeunit 80503 "License Management"
         OutputText: Text;
     begin
         OutputText := 'Generated Licenses:' + NewLine() + NewLine();
-        
+
         if LicenseRegistry.FindSet() then begin
             repeat
                 ApplicationRegistry.Get(LicenseRegistry."App ID");
@@ -272,7 +275,7 @@ codeunit 80503 "License Management"
 
         TempBlob.FromRecord(LicenseRegistry, LicenseRegistry.FieldNo("License File"));
         TempBlob.CreateInStream(InStream);
-        
+
         // In real implementation, use proper file export functionality
         Message('License file content ready for export to: %1', FileName);
     end;

@@ -105,7 +105,7 @@ page 80501 "Application Card"
                 var
                     LicenseGeneration: Page "License Generation";
                 begin
-                    if Rec."App ID" <> NullGuid then begin
+                    if IsNullGuid(Rec."App ID") then begin
                         LicenseGeneration.SetApplicationId(Rec."App ID");
                         LicenseGeneration.RunModal();
                     end;
@@ -124,7 +124,7 @@ page 80501 "Application Card"
                     LicenseRegistry: Record "License Registry";
                     LicenseRegistryPage: Page "License Registry";
                 begin
-                    if Rec."App ID" <> NullGuid then begin
+                    if not IsNullGuid(Rec."App ID") then begin
                         LicenseRegistry.SetRange("App ID", Rec."App ID");
                         LicenseRegistryPage.SetTableView(LicenseRegistry);
                         LicenseRegistryPage.Run();
@@ -162,7 +162,7 @@ page 80501 "Application Card"
 
     trigger OnAfterGetCurrRecord()
     begin
-        IsNewRecord := Rec."App ID" = NullGuid;
+        IsNewRecord := IsNullGuid(Rec."App ID");
     end;
 
     /// <summary>

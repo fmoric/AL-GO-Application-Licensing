@@ -142,7 +142,7 @@ page 80503 "License Generation"
                     GeneratedLicenseId: Guid;
                 begin
                     ValidateInput();
-                    
+
                     GeneratedLicenseId := LicenseGenerator.GenerateLicense(
                         SelectedAppId,
                         CustomerName,
@@ -212,19 +212,19 @@ page 80503 "License Generation"
     begin
         if IsNullGuid(SelectedAppId) then
             Error('Please select an application.');
-        
+
         if CustomerName = '' then
             Error('Please enter a customer name.');
-        
+
         if ValidFrom = 0D then
             Error('Please enter a valid start date.');
-        
+
         if ValidTo = 0D then
             Error('Please enter a valid end date.');
-        
+
         if ValidFrom > ValidTo then
             Error('Start date must be before end date.');
-        
+
         if ValidTo < Today then
             Error('End date cannot be in the past.');
     end;

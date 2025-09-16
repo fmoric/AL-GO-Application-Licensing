@@ -121,20 +121,6 @@ page 80500 "Application Registry"
         }
         area(Navigation)
         {
-            action(LicenseManagement)
-            {
-                ApplicationArea = All;
-                Caption = 'License Management';
-                Image = Setup;
-                ToolTip = 'Open license management center.';
-
-                trigger OnAction()
-                var
-                    LicenseManagementPage: Page "License Management Center";
-                begin
-                    LicenseManagementPage.Run();
-                end;
-            }
         }
     }
 
@@ -143,7 +129,9 @@ page 80500 "Application Registry"
         LicenseManagement: Codeunit "License Management";
     begin
         // Initialize licensing system if needed
-        if not LicenseManagement.CLI_ShowSystemStatus() then
-            LicenseManagement.InitializeLicensingSystem();
+        LicenseManagement.InitializeLicensingSystem();
     end;
+
+    var
+        LicenseManagement: Codeunit "License Management";
 }

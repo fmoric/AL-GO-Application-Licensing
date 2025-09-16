@@ -14,42 +14,42 @@ table 80500 "Application Registry"
         field(1; "App ID"; Guid)
         {
             Caption = 'Application ID';
-            DataClassification = SystemMetadata;
+
             NotBlank = true;
         }
         field(2; "App Name"; Text[100])
         {
             Caption = 'Application Name';
-            DataClassification = SystemMetadata;
+
             NotBlank = true;
         }
         field(3; "Publisher"; Text[100])
         {
             Caption = 'Publisher';
-            DataClassification = SystemMetadata;
+
             NotBlank = true;
         }
         field(4; "Version"; Text[20])
         {
             Caption = 'Version';
-            DataClassification = SystemMetadata;
+
             NotBlank = true;
         }
         field(5; "Description"; Text[250])
         {
             Caption = 'Description';
-            DataClassification = SystemMetadata;
+
         }
         field(6; "Active"; Boolean)
         {
             Caption = 'Active';
-            DataClassification = SystemMetadata;
+
             InitValue = true;
         }
         field(7; "Created Date"; DateTime)
         {
             Caption = 'Created Date';
-            DataClassification = SystemMetadata;
+
             Editable = false;
         }
         field(8; "Created By"; Code[50])
@@ -62,7 +62,7 @@ table 80500 "Application Registry"
         field(9; "Last Modified Date"; DateTime)
         {
             Caption = 'Last Modified Date';
-            DataClassification = SystemMetadata;
+
             Editable = false;
         }
         field(10; "Last Modified By"; Code[50])

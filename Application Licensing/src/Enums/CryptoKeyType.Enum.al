@@ -1,3 +1,4 @@
+namespace ApplicationLicensing.Enums;
 /// <summary>
 /// Enum Crypto Key Type (ID 80501).
 /// Represents the type of cryptographic key.

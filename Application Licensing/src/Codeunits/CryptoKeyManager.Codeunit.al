@@ -40,15 +40,13 @@ codeunit 80501 "Crypto Key Manager"
         CryptoKeyStorage.Active := true;
 
         // Store public key
-        TempBlob.CreateOutStream(PublicKeyOutStream);
+        CryptoKeyStorage."Public Key".CreateOutStream(PublicKeyOutStream);
         PublicKeyOutStream.WriteText(PublicKey);
-        TempBlob.ToRecord(CryptoKeyStorage, CryptoKeyStorage.FieldNo("Public Key"));
 
         // Store private key
         Clear(TempBlob);
         TempBlob.CreateOutStream(PrivateKeyOutStream);
         PrivateKeyOutStream.WriteText(PrivateKey);
-        TempBlob.ToRecord(CryptoKeyStorage, CryptoKeyStorage.FieldNo("Private Key"));
 
         exit(CryptoKeyStorage.Insert(true));
     end;
@@ -69,7 +67,7 @@ codeunit 80501 "Crypto Key Manager"
         CryptoKeyStorage.SetRange("Key Type", CryptoKeyStorage."Key Type"::"Signing Key");
         CryptoKeyStorage.SetRange(Active, true);
         CryptoKeyStorage.SetFilter("Expires Date", '>%1|%2', Today, 0D);
-        
+
         if not CryptoKeyStorage.FindFirst() then
             exit(false);
 
@@ -142,7 +140,7 @@ codeunit 80501 "Crypto Key Manager"
         CryptoKeyStorage.SetRange("Key Type", CryptoKeyStorage."Key Type"::"Signing Key");
         CryptoKeyStorage.SetRange(Active, true);
         CryptoKeyStorage.SetFilter("Expires Date", '>%1|%2', Today, 0D);
-        
+
         exit(not CryptoKeyStorage.IsEmpty);
     end;
 
@@ -160,11 +158,11 @@ codeunit 80501 "Crypto Key Manager"
         // Note: This is a simplified mock implementation for demonstration
         // In a real implementation, you would use proper RSA key generation
         // using .NET System.Security.Cryptography.RSACryptoServiceProvider
-        
+
         RandomGuid := CreateGuid();
         PublicKey := StrSubstNo('RSA-2048-PUBLIC-KEY-%1-%2', RandomGuid, CurrentDateTime);
         PrivateKey := StrSubstNo('RSA-2048-PRIVATE-KEY-%1-%2', RandomGuid, CurrentDateTime);
-        
+
         // In real implementation, generate actual RSA keys here
         exit(true);
     end;

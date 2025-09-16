@@ -34,14 +34,14 @@ codeunit 80502 "License Generator"
         // Validate application exists and is active
         if not ApplicationRegistry.Get(AppId) then
             Error('Application with ID %1 does not exist.', AppId);
-        
+
         if not ApplicationRegistry.Active then
             Error('Application %1 is not active.', ApplicationRegistry."App Name");
 
         // Validate dates
         if ValidFrom > ValidTo then
             Error('Valid From date must be before Valid To date.');
-        
+
         if ValidTo < Today then
             Error('License expiration date cannot be in the past.');
 
@@ -70,9 +70,8 @@ codeunit 80502 "License Generator"
         LicenseRegistry.Status := LicenseRegistry.Status::Active;
 
         // Store license file as blob
-        TempBlob.CreateOutStream(LicenseOutStream);
+        LicenseRegistry."License File".CreateOutStream(LicenseOutStream);
         LicenseOutStream.WriteText(CreateLicenseFileContent(LicenseContent, DigitalSignature));
-        TempBlob.ToRecord(LicenseRegistry, LicenseRegistry.FieldNo("License File"));
 
         if not LicenseRegistry.Insert(true) then
             Error('Failed to create license registry entry.');
@@ -98,7 +97,7 @@ codeunit 80502 "License Generator"
         end;
 
         ValidationResult := ValidateLicenseInternal(LicenseRegistry, ApplicationRegistry, CryptoKeyManager);
-        
+
         // Update validation result
         LicenseRegistry."Last Validated" := CurrentDateTime;
         LicenseRegistry."Validation Result" := ValidationResult;
@@ -146,7 +145,7 @@ codeunit 80502 "License Generator"
         LicenseRegistry.Status := LicenseRegistry.Status::Revoked;
         LicenseRegistry."Last Validated" := CurrentDateTime;
         LicenseRegistry."Validation Result" := 'Revoked by administrator';
-        
+
         exit(LicenseRegistry.Modify());
     end;
 
@@ -182,9 +181,9 @@ codeunit 80502 "License Generator"
         // Note: This is a simplified mock implementation
         // In real implementation, you would use proper RSA signing
         // using .NET System.Security.Cryptography.RSACryptoServiceProvider
-        
+
         Signature := StrSubstNo('RSA-SHA256-SIGNATURE:%1-%2', GetContentHash(Content), CurrentDateTime);
-        
+
         exit(Signature);
     end;
 
@@ -200,7 +199,7 @@ codeunit 80502 "License Generator"
                       '--- BEGIN SIGNATURE ---' + NewLine() +
                       DigitalSignature + NewLine() +
                       '--- END LICENSE ---';
-        
+
         exit(LicenseFile);
     end;
 
@@ -212,7 +211,7 @@ codeunit 80502 "License Generator"
         // Check if application exists and is active
         if not ApplicationRegistry.Get(LicenseRegistry."App ID") then
             exit('Application not found');
-        
+
         if not ApplicationRegistry.Active then
             exit('Application not active');
 
@@ -223,7 +222,7 @@ codeunit 80502 "License Generator"
         // Check date validity
         if Today < LicenseRegistry."Valid From" then
             exit('License not yet valid');
-        
+
         if Today > LicenseRegistry."Valid To" then
             exit('License expired');
 
