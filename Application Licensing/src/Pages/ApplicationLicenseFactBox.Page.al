@@ -1,3 +1,7 @@
+namespace ApplicationLicensing.Pages;
+using ApplicationLicensing.Tables;
+using ApplicationLicensing.Enums;
+
 /// <summary>
 /// Page Application License FactBox (ID 80505).
 /// FactBox showing license information for an application.

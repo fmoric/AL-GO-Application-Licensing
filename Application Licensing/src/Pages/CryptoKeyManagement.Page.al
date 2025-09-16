@@ -1,3 +1,9 @@
+namespace ApplicationLicensing.Pages;
+
+using System.Reflection;
+using ApplicationLicensing.Codeunit;
+using ApplicationLicensing.Tables;
+using ApplicationLicensing.Enums;
 /// <summary>
 /// Page Crypto Key Management (ID 80506).
 /// List page for managing cryptographic keys.

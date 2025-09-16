@@ -1,6 +1,8 @@
 namespace ApplicationLicensing.Codeunit;
 
 using ApplicationLicensing.Enums;
+using ApplicationLicensing.Tables;
+
 /// <summary>
 /// Codeunit License Management (ID 80503).
 /// Main coordinator for all licensing operations and CLI interface.

@@ -1,3 +1,7 @@
+namespace ApplicationLicensing.Pages;
+
+using ApplicationLicensing.Tables;
+
 /// <summary>
 /// Page Application Card (ID 80501).
 /// Card page for creating and editing application registrations.

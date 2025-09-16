@@ -1,3 +1,7 @@
+namespace ApplicationLicensing.Pages;
+
+using ApplicationLicensing.Codeunit;
+using ApplicationLicensing.Tables;
 /// <summary>
 /// Page License Registry (ID 80502).
 /// List page for viewing and managing generated licenses.

@@ -1,3 +1,8 @@
+namespace ApplicationLicensing.Codeunit;
+
+using ApplicationLicensing.Enums;
+using ApplicationLicensing.Tables;
+
 /// <summary>
 /// Codeunit Crypto Key Manager (ID 80501).
 /// Manages RSA key pair generation, storage, and retrieval for license signing.

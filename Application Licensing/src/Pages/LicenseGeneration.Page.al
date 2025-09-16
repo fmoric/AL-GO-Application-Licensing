@@ -1,3 +1,8 @@
+namespace ApplicationLicensing.Pages;
+
+using ApplicationLicensing.Codeunit;
+using ApplicationLicensing.Tables;
+
 /// <summary>
 /// Page License Generation (ID 80503).
 /// Card page for generating new licenses.

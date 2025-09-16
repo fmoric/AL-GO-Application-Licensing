@@ -1,3 +1,7 @@
+namespace ApplicationLicensing.Tables;
+
+using System.Security.AccessControl;
+using ApplicationLicensing.Pages;
 /// <summary>
 /// Table Application Registry (ID 80500).
 /// Stores registered applications with version control and activation status.

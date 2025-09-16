@@ -1,3 +1,10 @@
+namespace ApplicationLicensing.Tables;
+
+using ApplicationLicensing.Codeunit;
+using System.Security.AccessControl;
+using ApplicationLicensing.Pages;
+using ApplicationLicensing.Enums;
+
 /// <summary>
 /// Table License Registry (ID 80501).
 /// Stores generated licenses with metadata and validation information.

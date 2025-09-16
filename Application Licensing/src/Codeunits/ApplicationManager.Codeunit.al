@@ -1,12 +1,13 @@
+namespace ApplicationLicensing.Codeunit;
+
+using ApplicationLicensing.Tables;
+
 /// <summary>
 /// Codeunit Application Manager (ID 80500).
 /// Manages application registration, updates, and lifecycle operations.
 /// </summary>
 codeunit 80500 "Application Manager"
 {
-    trigger OnRun()
-    begin
-    end;
 
     /// <summary>
     /// Registers a new application in the system.

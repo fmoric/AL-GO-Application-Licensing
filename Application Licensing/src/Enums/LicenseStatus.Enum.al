@@ -1,3 +1,5 @@
+namespace ApplicationLicensing.Enums;
+
 /// <summary>
 /// Enum License Status (ID 80500).
 /// Represents the current status of a license.

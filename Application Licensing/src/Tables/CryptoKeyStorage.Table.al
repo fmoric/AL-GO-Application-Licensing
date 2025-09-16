@@ -1,3 +1,8 @@
+namespace ApplicationLicensing.Tables;
+
+using ApplicationLicensing.Enums;
+using System.Security.AccessControl;
+
 /// <summary>
 /// Table Crypto Key Storage (ID 80502).
 /// Stores RSA public/private key pairs for license signing and validation.

@@ -1,3 +1,8 @@
+namespace ApplicationLicensing.Pages;
+
+using ApplicationLicensing.Codeunit;
+using ApplicationLicensing.Tables;
+
 /// <summary>
 /// Page Application Registry (ID 80500).
 /// List page for managing application registrations.

@@ -1,3 +1,7 @@
+namespace ApplicationLicensing.Codeunit;
+
+using ApplicationLicensing.Tables;
+
 /// <summary>
 /// Codeunit License Generator (ID 80502).
 /// Generates cryptographically signed licenses with tamper detection.

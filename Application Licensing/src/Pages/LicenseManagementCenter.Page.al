@@ -1,3 +1,5 @@
+namespace ApplicationLicensing.Pages;
+
 /// <summary>
 /// Page License Management Center (ID 80504).
 /// Main dashboard for license management operations.
