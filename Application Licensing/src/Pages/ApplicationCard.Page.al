@@ -161,7 +161,6 @@ page 80501 "Application Card"
     trigger OnNewRecord(BelowxRec: Boolean)
     begin
         IsNewRecord := true;
-        Rec."App ID" := CreateGuid();
     end;
 
     trigger OnAfterGetCurrRecord()
