@@ -1,13 +1,21 @@
 {
-  "folders": [
-    {
-      "path": "Application Licensing"
+    "folders": [
+        {
+            "path": "Application Licensing"
+        },
+        {
+            "path": ".AL-Go"
+        }
+    ],
+    "settings": {
+        "powershell.cwd": ".AL-Go"
     },
-    {
-      "path": ".AL-Go"
-    }
-  ],
-  "settings": {
-    "powershell.cwd": ".AL-Go"
-  }
+    "CRS.FileNamePattern": "<ObjectNameShort>.<ObjectTypeShortPascalCase>.al",
+    "CRS.FileNamePatternExtensions": "<ObjectNameShort>.<ObjectTypeShortPascalCase>.al",
+    "CRS.FileNamePatternPageCustomizations": "<ObjectNameShort>.<ObjectTypeShortPascalCase>.al",
+    "CRS.RenameWithGit": false,
+    "CRS.ObjectNameSuffix": "-ApLicBET",
+    "CRS.RemovePrefixFromFilename": true,
+    "CRS.DisableCRSSnippets": true,
+    "CRS.OnSaveAlFileAction": "Rename"
 }

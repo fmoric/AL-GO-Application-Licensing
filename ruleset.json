@@ -1,0 +1,31 @@
+{
+    "name": "Exclude ruleset",
+    "description": "These rules must be respected by all the AL code written within the company.",
+    "rules": [
+        {
+            "id": "AS0084",
+            "action": "None",
+            "justification": "Development Azure Application Insights is not defined - Temporary"
+        },
+        {
+            "id": "AS0092",
+            "action": "None",
+            "justification": "Development Azure Application Insights is not defined - Temporary"
+        },
+        {
+            "id": "PTE0012",
+            "action": "None",
+            "justification": "Internal is set to test"
+        },
+        {
+            "id": "AS0081",
+            "action": "None",
+            "justification": "Internal is set to test"
+        },
+        {
+            "id": "LC0091",
+            "action": "None",
+            "justification": "Not working as intended v 15.0.1338262"
+        }
+    ]
+}

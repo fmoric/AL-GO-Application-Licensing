@@ -65,8 +65,16 @@ page 80504 "License Management Center"
                     ApplicationArea = All;
                     Caption = 'Generate License';
                     Image = Certificate;
+                    RunObject = page "License Generation";
                     ToolTip = 'Generate a new license.';
-
+                }
+                action(ImportLicense)
+                {
+                    ApplicationArea = All;
+                    Caption = 'Import License';
+                    Image = Import;
+                    RunObject = page "License Import";
+                    ToolTip = 'Import an existing license file into the system.';
                 }
             }
             group(Security)

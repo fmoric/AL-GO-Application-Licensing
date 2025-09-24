@@ -23,7 +23,7 @@ codeunit 80500 "Application Manager"
         ApplicationRegistry: Record "Application Registry";
     begin
         if ApplicationExists(AppId) then
-            Error('Application with ID %1 already exists.', AppId);
+            Error(ApplicationAlreadyExistsErr, AppId);
 
         ApplicationRegistry.Init();
         ApplicationRegistry."App ID" := AppId;
@@ -50,7 +50,7 @@ codeunit 80500 "Application Manager"
         ApplicationRegistry: Record "Application Registry";
     begin
         if not ApplicationRegistry.Get(AppId) then
-            Error('Application with ID %1 does not exist.', AppId);
+            Error(ApplicationNotFoundErr, AppId);
 
         ApplicationRegistry."App Name" := AppName;
         ApplicationRegistry.Publisher := Publisher;
@@ -71,7 +71,7 @@ codeunit 80500 "Application Manager"
         ApplicationRegistry: Record "Application Registry";
     begin
         if not ApplicationRegistry.Get(AppId) then
-            Error('Application with ID %1 does not exist.', AppId);
+            Error(ApplicationNotFoundErr, AppId);
 
         ApplicationRegistry.Active := Active;
         exit(ApplicationRegistry.Modify(true));
@@ -120,13 +120,13 @@ codeunit 80500 "Application Manager"
         LicenseRegistry: Record "License Registry";
     begin
         if not ApplicationRegistry.Get(AppId) then
-            Error('Application with ID %1 does not exist.', AppId);
+            Error(ApplicationNotFoundErr, AppId);
 
         // Check for existing licenses
         LicenseRegistry.SetRange("App ID", AppId);
         if not LicenseRegistry.IsEmpty then
             if not Confirm(
-                StrSubstNo('Application %1 has associated licenses. Delete all licenses and the application?', ApplicationRegistry."App Name"), false) then
+                StrSubstNo(ConfirmDeleteApplicationWithLicensesQst, ApplicationRegistry."App Name"), false) then
                 exit(false);
 
         // Delete all associated licenses
@@ -135,4 +135,10 @@ codeunit 80500 "Application Manager"
         // Delete the application
         exit(ApplicationRegistry.Delete(true));
     end;
+
+    var
+        // Labels for translatable text (error messages and confirmations)
+        ApplicationAlreadyExistsErr: Label 'Application with ID %1 already exists.';
+        ApplicationNotFoundErr: Label 'Application with ID %1 does not exist.';
+        ConfirmDeleteApplicationWithLicensesQst: Label 'Application %1 has associated licenses. Delete all licenses and the application?';
 }

@@ -156,10 +156,10 @@ page 80503 "License Generation"
                         LicensedFeatures);
 
                     if not IsNullGuid(GeneratedLicenseId) then begin
-                        Message('License generated successfully!' + NewLine() + 'License ID: %1', GeneratedLicenseId);
+                        Message(LicenseGeneratedSuccessMsg, GeneratedLicenseId);
                         CurrPage.Close();
                     end else
-                        Error('Failed to generate license.');
+                        Error(FailedGenerateLicenseErr);
                 end;
             }
             action(Cancel)
@@ -213,25 +213,26 @@ page 80503 "License Generation"
     /// <summary>
     /// Validates the input before generating a license.
     /// </summary>
+    //TODO Collect Errors and show in one message
     local procedure ValidateInput()
     begin
         if IsNullGuid(SelectedAppId) then
-            Error('Please select an application.');
+            Error(PleaseSelectApplicationErr);
 
         if CustomerName = '' then
-            Error('Please enter a customer name.');
+            Error(PleaseEnterCustomerNameErr);
 
         if ValidFrom = 0D then
-            Error('Please enter a valid start date.');
+            Error(PleaseEnterValidStartDateErr);
 
         if ValidTo = 0D then
-            Error('Please enter a valid end date.');
+            Error(PleaseEnterValidEndDateErr);
 
         if ValidFrom > ValidTo then
-            Error('Start date must be before end date.');
+            Error(StartDateBeforeEndDateErr);
 
         if ValidTo < Today then
-            Error('End date cannot be in the past.');
+            Error(EndDateCannotBePastErr);
     end;
 
     /// <summary>
@@ -241,4 +242,15 @@ page 80503 "License Generation"
     begin
         exit(10);
     end;
+
+    var
+        // Labels for translatable text
+        LicenseGeneratedSuccessMsg: Label 'License generated successfully!\\License ID: %1';
+        FailedGenerateLicenseErr: Label 'Failed to generate license.';
+        PleaseSelectApplicationErr: Label 'Please select an application.';
+        PleaseEnterCustomerNameErr: Label 'Please enter a customer name.';
+        PleaseEnterValidStartDateErr: Label 'Please enter a valid start date.';
+        PleaseEnterValidEndDateErr: Label 'Please enter a valid end date.';
+        StartDateBeforeEndDateErr: Label 'Start date must be before end date.';
+        EndDateCannotBePastErr: Label 'End date cannot be in the past.';
 }

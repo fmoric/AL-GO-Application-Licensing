@@ -2,6 +2,7 @@ namespace ApplicationLicensing.Codeunit;
 
 using ApplicationLicensing.Enums;
 using ApplicationLicensing.Tables;
+using System.Reflection;
 
 /// <summary>
 /// Codeunit License Management (ID 80503).
@@ -9,10 +10,6 @@ using ApplicationLicensing.Tables;
 /// </summary>
 codeunit 80503 "License Management"
 {
-    trigger OnRun()
-    begin
-    end;
-
     var
         ApplicationManager: Codeunit "Application Manager";
         CryptoKeyManager: Codeunit "Crypto Key Manager";
@@ -31,11 +28,11 @@ codeunit 80503 "License Management"
             exit(true);
 
         // Generate default signing key
-        DefaultKeyId := 'DEFAULT-SIGN-KEY';
+        DefaultKeyId := DefaultKeyIdPrefixLbl + 'KEY';
         if not CryptoKeyManager.GenerateKeyPair(DefaultKeyId, "Crypto Key Type"::"Signing Key", CalcDate('<+5Y>', Today)) then
-            Error('Failed to generate default signing key.');
+            Error(FailedGenerateDefaultSigningKeyErr);
 
-        Message('Licensing system initialized successfully with signing key: %1', DefaultKeyId);
+        Message(LicensingSystemInitializedMsg, DefaultKeyId);
         exit(true);
     end;
 
@@ -52,12 +49,12 @@ codeunit 80503 "License Management"
         AppGuid: Guid;
     begin
         if not Evaluate(AppGuid, AppId) then
-            Error('Invalid GUID format for App ID: %1', AppId);
+            Error(InvalidGuidAppIdErr, AppId);
 
         if ApplicationManager.RegisterApplication(AppGuid, CopyStr(AppName, 1, 100), CopyStr(Publisher, 1, 100), CopyStr(Version, 1, 20), CopyStr(Description, 1, 250)) then
-            Message('Application registered successfully: %1', AppName)
+            Message(ApplicationRegisteredSuccessMsg, AppName)
         else
-            Error('Failed to register application: %1', AppName);
+            Error(FailedRegisterApplicationErr, AppName);
     end;
 
     /// <summary>
@@ -68,16 +65,11 @@ codeunit 80503 "License Management"
         ApplicationRegistry: Record "Application Registry";
         OutputText: Text;
     begin
-        OutputText := 'Registered Applications:' + NewLine() + NewLine();
+        OutputText := RegisteredApplicationsLbl + NewLine() + NewLine();
 
         if ApplicationRegistry.FindSet() then begin
             repeat
-                OutputText += StrSubstNo('ID: %1' + NewLine() +
-                                       'Name: %2' + NewLine() +
-                                       'Publisher: %3' + NewLine() +
-                                       'Version: %4' + NewLine() +
-                                       'Active: %5' + NewLine() +
-                                       'Created: %6' + NewLine() + NewLine(),
+                OutputText += StrSubstNo(ApplicationDetailsFormatLbl,
                                        ApplicationRegistry."App ID",
                                        ApplicationRegistry."App Name",
                                        ApplicationRegistry.Publisher,
@@ -86,7 +78,7 @@ codeunit 80503 "License Management"
                                        ApplicationRegistry."Created Date");
             until ApplicationRegistry.Next() = 0;
         end else begin
-            OutputText += 'No applications registered.';
+            OutputText += NoApplicationsRegisteredLbl;
         end;
 
         Message(OutputText);
@@ -102,26 +94,27 @@ codeunit 80503 "License Management"
     /// <param name="Features">Comma-separated feature list.</param>
     procedure CLI_GenerateLicense(AppId: Text; CustomerName: Text; ValidFromDate: Text; ValidToDate: Text; Features: Text)
     var
+        SuccesfullMsg: Label 'License generated successfully.';
         AppGuid: Guid;
         ValidFrom: Date;
         ValidTo: Date;
         LicenseId: Guid;
     begin
         if not Evaluate(AppGuid, AppId) then
-            Error('Invalid GUID format for App ID: %1', AppId);
+            Error(InvalidGuidAppIdErr, AppId);
 
         if not Evaluate(ValidFrom, ValidFromDate) then
-            Error('Invalid date format for Valid From: %1 (expected YYYY-MM-DD)', ValidFromDate);
+            Error(InvalidDateFormatValidFromErr, ValidFromDate);
 
         if not Evaluate(ValidTo, ValidToDate) then
-            Error('Invalid date format for Valid To: %1 (expected YYYY-MM-DD)', ValidToDate);
+            Error(InvalidDateFormatValidToErr, ValidToDate);
 
         LicenseId := LicenseGenerator.GenerateLicense(AppGuid, CopyStr(CustomerName, 1, 100), ValidFrom, ValidTo, CopyStr(Features, 1, 250));
 
         if not IsNullGuid(LicenseId) then
-            Message('License generated successfully.' + NewLine() + 'License ID: %1', LicenseId)
+            Message(SuccesfullMsg + NewLine() + LicenseIDMsg, LicenseId)
         else
-            Error('Failed to generate license.');
+            Error(FailedGenerateLicenseErr);
     end;
 
     /// <summary>
@@ -135,24 +128,19 @@ codeunit 80503 "License Management"
         LicenseRegistry: Record "License Registry";
     begin
         if not Evaluate(LicenseGuid, LicenseId) then
-            Error('Invalid GUID format for License ID: %1', LicenseId);
+            Error(InvalidGuidLicenseIdErr, LicenseId);
 
         IsValid := LicenseGenerator.ValidateLicense(LicenseGuid);
 
         if LicenseRegistry.Get(LicenseGuid) then
-            Message('License Validation Result:' + NewLine() +
-                   'License ID: %1' + NewLine() +
-                   'Status: %2' + NewLine() +
-                   'Valid: %3' + NewLine() +
-                   'Last Validation: %4' + NewLine() +
-                   'Validation Result: %5',
+            Message(LicenseValidationResultDetailsLbl,
                    LicenseId,
                    LicenseRegistry.Status,
                    IsValid,
                    LicenseRegistry."Last Validated",
                    LicenseRegistry."Validation Result")
         else
-            Error('License not found: %1', LicenseId);
+            Error(LicenseNotFoundErr, LicenseId);
     end;
 
     /// <summary>
@@ -164,19 +152,12 @@ codeunit 80503 "License Management"
         ApplicationRegistry: Record "Application Registry";
         OutputText: Text;
     begin
-        OutputText := 'Generated Licenses:' + NewLine() + NewLine();
+        OutputText := GeneratedLicensesLbl + NewLine() + NewLine();
 
         if LicenseRegistry.FindSet() then begin
             repeat
                 ApplicationRegistry.Get(LicenseRegistry."App ID");
-                OutputText += StrSubstNo('License ID: %1' + NewLine() +
-                                       'Application: %2' + NewLine() +
-                                       'Customer: %3' + NewLine() +
-                                       'Valid From: %4' + NewLine() +
-                                       'Valid To: %5' + NewLine() +
-                                       'Status: %6' + NewLine() +
-                                       'Features: %7' + NewLine() +
-                                       'Created: %8' + NewLine() + NewLine(),
+                OutputText += StrSubstNo(LicenseDetailsFormatLbl,
                                        LicenseRegistry."License ID",
                                        ApplicationRegistry."App Name",
                                        LicenseRegistry."Customer Name",
@@ -187,7 +168,7 @@ codeunit 80503 "License Management"
                                        LicenseRegistry."Created Date");
             until LicenseRegistry.Next() = 0;
         end else begin
-            OutputText += 'No licenses generated.';
+            OutputText += NoLicensesGeneratedLbl;
         end;
 
         Message(OutputText);
@@ -203,12 +184,12 @@ codeunit 80503 "License Management"
         ExpiresDate: Date;
     begin
         if not Evaluate(ExpiresDate, ExpirationDate) then
-            Error('Invalid date format for expiration: %1 (expected YYYY-MM-DD)', ExpirationDate);
+            Error(InvalidDateFormatExpirationErr, ExpirationDate);
 
         if CryptoKeyManager.GenerateKeyPair(CopyStr(KeyId, 1, 20), "Crypto Key Type"::"Signing Key", ExpiresDate) then
-            Message('Signing key generated successfully: %1', KeyId)
+            Message(SigningKeyGeneratedSuccessMsg, KeyId)
         else
-            Error('Failed to generate signing key: %1', KeyId);
+            Error(FailedGenerateSigningKeyErr, KeyId);
     end;
 
     /// <summary>
@@ -233,12 +214,12 @@ codeunit 80503 "License Management"
         CryptoKeyStorage.SetRange(Active, true);
         ActiveKeys := CryptoKeyStorage.Count;
 
-        StatusText := 'Licensing System Status:' + NewLine() + NewLine() +
-                     StrSubstNo('Active Applications: %1', ActiveApps) + NewLine() +
-                     StrSubstNo('Active Licenses: %1', TotalLicenses) + NewLine() +
-                     StrSubstNo('Active Crypto Keys: %1', ActiveKeys) + NewLine() +
-                     StrSubstNo('Signing Key Available: %1', CryptoKeyManager.IsSigningKeyAvailable()) + NewLine() +
-                     StrSubstNo('System Time: %1', CurrentDateTime);
+        StatusText := SystemStatusHeaderLbl + NewLine() + NewLine() +
+                     StrSubstNo(ActiveApplicationsLbl, ActiveApps) + NewLine() +
+                     StrSubstNo(ActiveLicensesLbl, TotalLicenses) + NewLine() +
+                     StrSubstNo(ActiveCryptoKeysLbl, ActiveKeys) + NewLine() +
+                     StrSubstNo(SigningKeyAvailableLbl, CryptoKeyManager.IsSigningKeyAvailable()) + NewLine() +
+                     StrSubstNo(SystemTimeLbl, CurrentDateTime);
 
         Message(StatusText);
     end;
@@ -256,9 +237,11 @@ codeunit 80503 "License Management"
     /// <summary>
     /// Gets a newline character for formatting.
     /// </summary>
-    local procedure NewLine(): Char
+    local procedure NewLine(): Text
+    var
+        TypeHelper: Codeunit "Type Helper";
     begin
-        exit(10);
+        exit(TypeHelper.NewLine());
     end;
 
     /// <summary>
@@ -271,6 +254,9 @@ codeunit 80503 "License Management"
         LicenseRegistry: Record "License Registry";
         TempBlob: Codeunit System.Utilities."Temp Blob";
         InStream: InStream;
+        ToFolder: Text;
+        DialogTitle: Text;
+        ResultFilePath: Text;
     begin
         if not LicenseRegistry.Get(LicenseId) then
             Error('License not found: %1', LicenseId);
@@ -278,7 +264,47 @@ codeunit 80503 "License Management"
         TempBlob.FromRecord(LicenseRegistry, LicenseRegistry.FieldNo("License File"));
         TempBlob.CreateInStream(InStream);
 
+        DownloadFromStream(InStream, 'Export License', '', '', FileName);
         // In real implementation, use proper file export functionality
-        Message('License file content ready for export to: %1', FileName);
+        Message(LicenseFileReadyForExportMsg, FileName);
     end;
+
+    var
+        // Labels for translatable text
+        FailedGenerateDefaultSigningKeyErr: Label 'Failed to generate default signing key.';
+        LicensingSystemInitializedMsg: Label 'Licensing system initialized successfully with signing key: %1';
+        InvalidGuidAppIdErr: Label 'Invalid GUID format for App ID: %1';
+        ApplicationRegisteredSuccessMsg: Label 'Application registered successfully: %1';
+        FailedRegisterApplicationErr: Label 'Failed to register application: %1';
+        RegisteredApplicationsLbl: Label 'Registered Applications:';
+        NoApplicationsRegisteredLbl: Label 'No applications registered.';
+        GeneratedLicensesLbl: Label 'Generated Licenses:';
+        NoLicensesGeneratedLbl: Label 'No licenses generated.';
+        InvalidGuidLicenseIdErr: Label 'Invalid GUID format for License ID: %1';
+        InvalidDateFormatValidFromErr: Label 'Invalid date format for Valid From: %1 (expected YYYY-MM-DD)';
+        InvalidDateFormatValidToErr: Label 'Invalid date format for Valid To: %1 (expected YYYY-MM-DD)';
+        LicenseGeneratedSuccessMsg: Label 'License generated successfully.\\License ID: %1';
+        FailedGenerateLicenseErr: Label 'Failed to generate license.';
+        LicenseNotFoundErr: Label 'License not found: %1';
+        InvalidDateFormatExpirationErr: Label 'Invalid date format for expiration: %1 (expected YYYY-MM-DD)';
+        SigningKeyGeneratedSuccessMsg: Label 'Signing key generated successfully: %1';
+        FailedGenerateSigningKeyErr: Label 'Failed to generate signing key: %1';
+        LicenseFileReadyForExportMsg: Label 'License file content ready for export to: %1';
+        LicenseIDMsg: Label 'License ID: %1';
+        LicenseValidationResultMsg: Label 'License Validation Result:';
+        SystemStatusHeaderLbl: Label 'Licensing System Status:';
+        ActiveApplicationsLbl: Label 'Active Applications: %1';
+        ActiveLicensesLbl: Label 'Active Licenses: %1';
+        ActiveCryptoKeysLbl: Label 'Active Crypto Keys: %1';
+        SigningKeyAvailableLbl: Label 'Signing Key Available: %1';
+        SystemTimeLbl: Label 'System Time: %1';
+
+        // Format labels for complex output (with locked parts)
+        ApplicationDetailsFormatLbl: Label 'ID: %1\\Name: %2\\Publisher: %3\\Version: %4\\Active: %5\\Created: %6\\';
+        LicenseDetailsFormatLbl: Label 'License ID: %1\\Application: %2\\Customer: %3\\Valid From: %4\\Valid To: %5\\Status: %6\\Features: %7\\Created: %8\\';
+        LicenseValidationResultDetailsLbl: Label 'License Validation Result:\\License ID: %1\\Status: %2\\Valid: %3\\Last Validation: %4\\Validation Result: %5';
+
+        // Locked labels for technical strings
+        DefaultKeyIdPrefixLbl: Label 'DEFAULT-SIGN-', Locked = true;
+        DateTimeFormatLbl: Label '<Year4><Month,2><Day,2><Hours24><Minutes,2><Seconds,2>', Locked = true;
 }

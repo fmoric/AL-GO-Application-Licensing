@@ -1,4 +1,4 @@
-permissionset 80500 "All"
+permissionset 80500 "All-ApLicBET"
 {
     Access = Internal;
     Assignable = true;
@@ -14,6 +14,7 @@ permissionset 80500 "All"
          page "Application Registry" = X,
          page "Crypto Key Management" = X,
          page "License Generation" = X,
+         page "License Import" = X,
          page "License Management Center" = X,
          page "License Registry" = X,
          table "Application Registry" = X,

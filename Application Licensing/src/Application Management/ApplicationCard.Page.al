@@ -109,7 +109,7 @@ page 80501 "Application Card"
                 var
                     LicenseGeneration: Page "License Generation";
                 begin
-                    if IsNullGuid(Rec."App ID") then begin
+                    if not IsNullGuid(Rec."App ID") then begin
                         LicenseGeneration.SetApplicationId(Rec."App ID");
                         LicenseGeneration.RunModal();
                     end;

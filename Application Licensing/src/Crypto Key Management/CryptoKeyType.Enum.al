@@ -20,4 +20,8 @@ enum 80501 "Crypto Key Type"
     {
         Caption = 'Master Key';
     }
+    value(3; Certificate)
+    {
+        Caption = 'Certificate';
+    }
 }

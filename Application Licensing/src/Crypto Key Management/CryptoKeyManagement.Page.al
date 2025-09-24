@@ -11,11 +11,11 @@ using ApplicationLicensing.Enums;
 page 80506 "Crypto Key Management"
 {
     PageType = List;
-    ApplicationArea = All;
+
     UsageCategory = Administration;
     SourceTable = "Crypto Key Storage";
     Caption = 'Cryptographic Key Management';
-
+    ApplicationArea = All;
     layout
     {
         area(Content)
@@ -24,47 +24,35 @@ page 80506 "Crypto Key Management"
             {
                 field("Key ID"; Rec."Key ID")
                 {
-                    ApplicationArea = All;
-                    ToolTip = 'Specifies the unique key identifier.';
                 }
                 field("Key Type"; Rec."Key Type")
                 {
-                    ApplicationArea = All;
-                    ToolTip = 'Specifies the type of cryptographic key.';
+
+                    Editable = not Rec."Imported Certificate";
                 }
                 field(Algorithm; Rec.Algorithm)
                 {
-                    ApplicationArea = All;
-                    ToolTip = 'Specifies the cryptographic algorithm used.';
+                    Editable = not Rec."Imported Certificate";
                 }
                 field(Active; Rec.Active)
                 {
-                    ApplicationArea = All;
-                    ToolTip = 'Specifies whether the key is active.';
                     Style = Favorable;
                     StyleExpr = Rec.Active;
                 }
                 field("Created Date"; Rec."Created Date")
                 {
-                    ApplicationArea = All;
-                    ToolTip = 'Specifies when the key was created.';
                 }
                 field("Expires Date"; Rec."Expires Date")
                 {
-                    ApplicationArea = All;
-                    ToolTip = 'Specifies when the key expires.';
                     Style = Attention;
                     StyleExpr = ValidToExpr;
+                    Editable = Rec."Key Type" <> Rec."Key Type"::Certificate;
                 }
                 field("Usage Count"; Rec."Usage Count")
                 {
-                    ApplicationArea = All;
-                    ToolTip = 'Specifies how many times the key has been used.';
                 }
                 field("Created By"; Rec."Created By")
                 {
-                    ApplicationArea = All;
-                    ToolTip = 'Specifies who created the key.';
                 }
             }
         }
@@ -76,7 +64,7 @@ page 80506 "Crypto Key Management"
         {
             action(GenerateSigningKey)
             {
-                ApplicationArea = All;
+
                 Caption = 'Generate Signing Key';
                 Image = EncryptionKeys;
                 ToolTip = 'Generate a new RSA signing key.';
@@ -87,19 +75,38 @@ page 80506 "Crypto Key Management"
                     KeyId: Text;
                     ExpirationDate: Date;
                 begin
-                    KeyId := StrSubstNo('SIGN-KEY-%1', Format(CurrentDateTime, 0, '<Year4><Month,2><Day,2><Hours24><Minutes,2>'));
+                    KeyId := StrSubstNo(KeyIdSigningFormatLbl, Format(CurrentDateTime, 0, KeyIdDateFormatLbl));
                     ExpirationDate := CalcDate('<+5Y>', Today);
 
                     if CryptoKeyManager.GenerateKeyPair(CopyStr(KeyId, 1, 20), "Crypto Key Type"::"Signing Key", ExpirationDate) then begin
-                        Message('Signing key generated successfully: %1', KeyId);
+                        Message(SigningKeyGeneratedMsg, KeyId);
                         CurrPage.Update(false);
                     end else
-                        Error('Failed to generate signing key.');
+                        Error(FailedGenerateSigningKeyErr);
+                end;
+            }
+            action(UploadCertificate)
+            {
+
+                Caption = 'Upload Certificate';
+                Image = Import;
+                ToolTip = 'Directly upload and save a .p12 certificate file with automatic key generation.';
+                Promoted = true;
+                PromotedCategory = Process;
+                PromotedIsBig = true;
+
+                trigger OnAction()
+                var
+                    CryptoKeyManager: Codeunit "Crypto Key Manager";
+                    NewCryptoKeyStorage: Record "Crypto Key Storage";
+                    KeyId: Text;
+                begin
+                    CryptoKeyManager.UploadAndValidateCertificate(NewCryptoKeyStorage);
                 end;
             }
             action(GenerateValidationKey)
             {
-                ApplicationArea = All;
+
                 Caption = 'Generate Validation Key';
                 Image = EncryptionKeys;
                 ToolTip = 'Generate a new RSA validation key.';
@@ -110,19 +117,19 @@ page 80506 "Crypto Key Management"
                     KeyId: Text;
                     ExpirationDate: Date;
                 begin
-                    KeyId := StrSubstNo('VALID-KEY-%1', Format(CurrentDateTime, 0, '<Year4><Month,2><Day,2><Hours24><Minutes,2>'));
+                    KeyId := StrSubstNo(KeyIdValidationFormatLbl, Format(CurrentDateTime, 0, KeyIdDateFormatLbl));
                     ExpirationDate := CalcDate('<+5Y>', Today);
 
                     if CryptoKeyManager.GenerateKeyPair(CopyStr(KeyId, 1, 20), "Crypto Key Type"::"Validation Key", ExpirationDate) then begin
-                        Message('Validation key generated successfully: %1', KeyId);
+                        Message(ValidationKeyGeneratedMsg, KeyId);
                         CurrPage.Update(false);
                     end else
-                        Error('Failed to generate validation key.');
+                        Error(FailedGenerateValidationKeyErr);
                 end;
             }
             action(DeactivateKey)
             {
-                ApplicationArea = All;
+
                 Caption = 'Deactivate Key';
                 Image = Cancel;
                 ToolTip = 'Deactivate the selected key.';
@@ -132,13 +139,12 @@ page 80506 "Crypto Key Management"
                 var
                     CryptoKeyManager: Codeunit "Crypto Key Manager";
                 begin
-                    if Confirm(
-                        StrSubstNo('Are you sure you want to deactivate key %1?', Rec."Key ID"), false) then begin
+                    if Confirm(ConfirmDeactivateKeyQst, false, Rec."Key ID") then begin
                         if CryptoKeyManager.DeactivateKey(Rec."Key ID") then begin
-                            Message('Key deactivated successfully.');
+                            Message(KeyDeactivatedSuccessMsg);
                             CurrPage.Update(false);
                         end else
-                            Error('Failed to deactivate key.');
+                            Error(FailedDeactivateKeyErr);
                     end;
                 end;
             }
@@ -147,7 +153,7 @@ page 80506 "Crypto Key Management"
         {
             action(CheckSystemStatus)
             {
-                ApplicationArea = All;
+
                 Caption = 'Check System Status';
                 Image = Status;
                 ToolTip = 'Check the status of the cryptographic system.';
@@ -157,21 +163,21 @@ page 80506 "Crypto Key Management"
                     CryptoKeyManager: Codeunit "Crypto Key Manager";
                     StatusMessage: Text;
                 begin
-                    StatusMessage := 'Cryptographic System Status:' + NewLine() + NewLine();
+                    StatusMessage := CryptoSystemStatusLbl + NewLine() + NewLine();
 
                     if CryptoKeyManager.IsSigningKeyAvailable() then
-                        StatusMessage += 'Signing Key: Available' + NewLine()
+                        StatusMessage += SigningKeyAvailableLbl + NewLine()
                     else
-                        StatusMessage += 'Signing Key: NOT AVAILABLE' + NewLine();
+                        StatusMessage += SigningKeyNotAvailableLbl + NewLine();
 
-                    StatusMessage += StrSubstNo('Total Keys: %1', Rec.Count) + NewLine();
+                    StatusMessage += StrSubstNo(TotalKeysLbl, Rec.Count) + NewLine();
 
                     Rec.SetRange(Active, true);
-                    StatusMessage += StrSubstNo('Active Keys: %1', Rec.Count) + NewLine();
+                    StatusMessage += StrSubstNo(ActiveKeysLbl, Rec.Count) + NewLine();
 
                     Rec.SetRange(Active);
                     Rec.SetRange("Key Type", Rec."Key Type"::"Signing Key");
-                    StatusMessage += StrSubstNo('Signing Keys: %1', Rec.Count) + NewLine();
+                    StatusMessage += StrSubstNo(SigningKeysLbl, Rec.Count) + NewLine();
 
                     Message(StatusMessage);
                     Rec.SetRange("Key Type");
@@ -199,4 +205,29 @@ page 80506 "Crypto Key Management"
 
     var
         ValidToExpr: Text;
+
+        // Labels for translatable text
+        CryptoSystemStatusLbl: Label 'Cryptographic System Status:';
+        SigningKeyAvailableLbl: Label 'Signing Key: Available';
+        SigningKeyNotAvailableLbl: Label 'Signing Key: NOT AVAILABLE';
+        TotalKeysLbl: Label 'Total Keys: %1';
+        ActiveKeysLbl: Label 'Active Keys: %1';
+        SigningKeysLbl: Label 'Signing Keys: %1';
+        SigningKeyGeneratedMsg: Label 'Signing key generated successfully: %1';
+        ValidationKeyGeneratedMsg: Label 'Validation key generated successfully: %1';
+        KeyDeactivatedSuccessMsg: Label 'Key deactivated successfully.';
+        ConfirmDeactivateKeyQst: Label 'Are you sure you want to deactivate key %1?';
+        FailedGenerateSigningKeyErr: Label 'Failed to generate signing key.';
+        FailedGenerateValidationKeyErr: Label 'Failed to generate validation key.';
+        FailedDeactivateKeyErr: Label 'Failed to deactivate key.';
+
+        // Locked labels for technical strings
+        KeyIdSigningFormatLbl: Label 'SIGN-KEY-%1', Locked = true;
+        KeyIdValidationFormatLbl: Label 'VALID-KEY-%1', Locked = true;
+        KeyIdUploadFormatLbl: Label 'CERT-%1', Locked = true;
+        KeyIdDateFormatLbl: Label '<Year4><Month,2><Day,2><Hours24><Minutes,2>', Locked = true;
+
+        // Additional labels for upload functionality
+        CertificateUploadedSuccessMsg: Label 'Certificate uploaded successfully with Key ID: %1';
+        CertificateUploadFailedErr: Label 'Failed to upload certificate. Please check the file and password.';
 }

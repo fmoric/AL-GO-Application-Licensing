@@ -99,9 +99,9 @@ page 80502 "License Registry"
                 begin
                     IsValid := LicenseGenerator.ValidateLicense(Rec."License ID");
                     if IsValid then
-                        Message('License validation successful.')
+                        Message(LicenseValidationSuccessMsg)
                     else
-                        Message('License validation failed: %1', Rec."Validation Result");
+                        Message(LicenseValidationFailedMsg, Rec."Validation Result");
 
                     CurrPage.Update(false);
                 end;
@@ -118,14 +118,12 @@ page 80502 "License Registry"
                 var
                     LicenseGenerator: Codeunit "License Generator";
                 begin
-                    if Confirm(
-                        StrSubstNo('Are you sure you want to revoke license %1 for customer %2?',
-                                  Rec."License ID", Rec."Customer Name"), false) then begin
+                    if Confirm(ConfirmRevokeLicenseQst, false, Rec."License ID", Rec."Customer Name") then begin
                         if LicenseGenerator.RevokeLicense(Rec."License ID") then begin
-                            Message('License revoked successfully.');
+                            Message(LicenseRevokedSuccessMsg);
                             CurrPage.Update(false);
                         end else
-                            Error('Failed to revoke license.');
+                            Error(FailedRevokeLicenseErr);
                     end;
                 end;
             }
@@ -141,7 +139,7 @@ page 80502 "License Registry"
                     LicenseManagement: Codeunit "License Management";
                     FileName: Text;
                 begin
-                    FileName := StrSubstNo('%1_%2_License.txt', Rec."Customer Name", Format(Rec."Valid To", 0, '<Year4><Month,2><Day,2>'));
+                    FileName := StrSubstNo(LicenseFileNameFormatLbl, Rec."Customer Name", Format(Rec."Valid To", 0, DateFormatLbl));
                     LicenseManagement.ExportLicenseFile(Rec."License ID", FileName);
                 end;
             }
@@ -157,6 +155,21 @@ page 80502 "License Registry"
                     LicenseGeneration: Page "License Generation";
                 begin
                     LicenseGeneration.RunModal();
+                    CurrPage.Update(false);
+                end;
+            }
+            action(ImportLicense)
+            {
+                ApplicationArea = All;
+                Caption = 'Import License';
+                Image = Import;
+                ToolTip = 'Import an existing license file into the system.';
+
+                trigger OnAction()
+                var
+                    LicenseImport: Page "License Import";
+                begin
+                    LicenseImport.RunModal();
                     CurrPage.Update(false);
                 end;
             }
@@ -195,4 +208,15 @@ page 80502 "License Registry"
 
     var
         ValidToExpr: Text;
+
+        // Labels for translatable text
+        LicenseValidationSuccessMsg: Label 'License validation successful.';
+        LicenseValidationFailedMsg: Label 'License validation failed: %1';
+        LicenseRevokedSuccessMsg: Label 'License revoked successfully.';
+        ConfirmRevokeLicenseQst: Label 'Are you sure you want to revoke license %1 for customer %2?';
+        FailedRevokeLicenseErr: Label 'Failed to revoke license.';
+
+        // Locked labels for technical strings
+        LicenseFileNameFormatLbl: Label '%1_%2_License.txt', Locked = true;
+        DateFormatLbl: Label '<Year4><Month,2><Day,2>', Locked = true;
 }
