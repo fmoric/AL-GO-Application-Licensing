@@ -8,24 +8,27 @@ enum 80500 "License Status"
 {
     Extensible = true;
     Caption = 'License Status';
-
-    value(0; Active)
+    value(0; "")
+    {
+        Caption = '', Locked = true;
+    }
+    value(1; Active)
     {
         Caption = 'Active';
     }
-    value(1; Expired)
+    value(2; Expired)
     {
         Caption = 'Expired';
     }
-    value(2; Suspended)
+    value(3; Suspended)
     {
         Caption = 'Suspended';
     }
-    value(3; Revoked)
+    value(4; Revoked)
     {
         Caption = 'Revoked';
     }
-    value(4; Invalid)
+    value(5; Invalid)
     {
         Caption = 'Invalid';
     }

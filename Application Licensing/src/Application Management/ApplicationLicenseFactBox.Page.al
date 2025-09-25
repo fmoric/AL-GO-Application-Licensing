@@ -11,7 +11,8 @@ page 80505 "Application License FactBox"
     PageType = CardPart;
     SourceTable = "Application Registry";
     Caption = 'License Information';
-
+    Permissions = tabledata "Application Registry" = r,
+                tabledata "License Registry" = r;
     layout
     {
         area(Content)
@@ -23,7 +24,7 @@ page 80505 "Application License FactBox"
                 {
                     ApplicationArea = All;
                     Caption = 'Total Licenses';
-                    ToolTip = 'Shows the total number of licenses for this application.';
+                    ToolTip = 'Specifies the total number of licenses generated for this application.';
                     Editable = false;
                     DrillDown = true;
 
@@ -41,7 +42,7 @@ page 80505 "Application License FactBox"
                 {
                     ApplicationArea = All;
                     Caption = 'Active Licenses';
-                    ToolTip = 'Shows the number of active licenses for this application.';
+                    ToolTip = 'Specifies the number of active licenses for this application.';
                     Editable = false;
                     Style = Favorable;
                     StyleExpr = ActiveLicenses > 0;
@@ -62,7 +63,7 @@ page 80505 "Application License FactBox"
                 {
                     ApplicationArea = All;
                     Caption = 'Expired Licenses';
-                    ToolTip = 'Shows the number of expired licenses for this application.';
+                    ToolTip = 'Specifies the number of expired licenses for this application.';
                     Editable = false;
                     Style = Attention;
                     StyleExpr = ExpiredLicenses > 0;
@@ -71,7 +72,7 @@ page 80505 "Application License FactBox"
                 {
                     ApplicationArea = All;
                     Caption = 'Revoked Licenses';
-                    ToolTip = 'Shows the number of revoked licenses for this application.';
+                    ToolTip = 'Specifies the number of revoked licenses for this application.';
                     Editable = false;
                     Style = Unfavorable;
                     StyleExpr = RevokedLicenses > 0;
@@ -84,27 +85,19 @@ page 80505 "Application License FactBox"
                 {
                     ApplicationArea = All;
                     Caption = 'Last License Generated';
-                    ToolTip = 'Shows when the last license was generated for this application.';
+                    ToolTip = 'Specifies when the last license was generated for this application.';
                     Editable = false;
                 }
                 field(LastCustomer; LastCustomer)
                 {
                     ApplicationArea = All;
                     Caption = 'Last Customer';
-                    ToolTip = 'Shows the last customer for whom a license was generated.';
+                    ToolTip = 'Specifies the last customer for whom a license was generated.';
                     Editable = false;
                 }
             }
         }
     }
-
-    var
-        TotalLicenses: Integer;
-        ActiveLicenses: Integer;
-        ExpiredLicenses: Integer;
-        RevokedLicenses: Integer;
-        LastLicenseGenerated: DateTime;
-        LastCustomer: Text[100];
 
     trigger OnAfterGetCurrRecord()
     begin
@@ -129,19 +122,19 @@ page 80505 "Application License FactBox"
             exit;
 
         LicenseRegistry.SetRange("App ID", Rec."App ID");
-        TotalLicenses := LicenseRegistry.Count;
+        TotalLicenses := LicenseRegistry.Count();
 
         LicenseRegistry.SetRange(Status, LicenseRegistry.Status::Active);
-        LicenseRegistry.SetFilter("Valid To", '>=%1', Today);
-        ActiveLicenses := LicenseRegistry.Count;
+        LicenseRegistry.SetFilter("Valid To", '>=%1', Today());
+        ActiveLicenses := LicenseRegistry.Count();
 
         LicenseRegistry.SetRange(Status);
-        LicenseRegistry.SetFilter("Valid To", '<%1', Today);
-        ExpiredLicenses := LicenseRegistry.Count;
+        LicenseRegistry.SetFilter("Valid To", '<%1', Today());
+        ExpiredLicenses := LicenseRegistry.Count();
 
         LicenseRegistry.SetRange("Valid To");
         LicenseRegistry.SetRange(Status, LicenseRegistry.Status::Revoked);
-        RevokedLicenses := LicenseRegistry.Count;
+        RevokedLicenses := LicenseRegistry.Count();
 
         // Get last license information
         LicenseRegistry.SetRange(Status);
@@ -152,4 +145,13 @@ page 80505 "Application License FactBox"
             LastCustomer := LicenseRegistry."Customer Name";
         end;
     end;
+
+    var
+        TotalLicenses: Integer;
+        ActiveLicenses: Integer;
+        ExpiredLicenses: Integer;
+        RevokedLicenses: Integer;
+        LastLicenseGenerated: DateTime;
+        LastCustomer: Text[100];
+
 }

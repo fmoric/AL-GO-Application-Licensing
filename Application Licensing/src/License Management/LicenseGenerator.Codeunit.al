@@ -1,6 +1,7 @@
 namespace ApplicationLicensing.Codeunit;
 
 using ApplicationLicensing.Tables;
+using System.Reflection;
 
 /// <summary>
 /// Codeunit License Generator (ID 80502).
@@ -8,9 +9,9 @@ using ApplicationLicensing.Tables;
 /// </summary>
 codeunit 80502 "License Generator"
 {
-    trigger OnRun()
-    begin
-    end;
+    Permissions = tabledata "Application Registry" = rimd,
+              tabledata "License Registry" = rimd,
+              tabledata "Crypto Key Storage" = r;
 
     /// <summary>
     /// Generates a new signed license for an application.
@@ -26,7 +27,6 @@ codeunit 80502 "License Generator"
         ApplicationRegistry: Record "Application Registry";
         LicenseRegistry: Record "License Registry";
         CryptoKeyManager: Codeunit "Crypto Key Manager";
-        TempBlob: Codeunit System.Utilities."Temp Blob";
         LicenseOutStream: OutStream;
         KeyId: Code[20];
         PublicKey: Text;
@@ -46,7 +46,7 @@ codeunit 80502 "License Generator"
         if ValidFrom > ValidTo then
             Error(ValidFromBeforeValidToErr);
 
-        if ValidTo < Today then
+        if ValidTo < Today() then
             Error(ExpirationDateCannotBePastErr);
 
         // Get signing key
@@ -92,7 +92,6 @@ codeunit 80502 "License Generator"
     var
         LicenseRegistry: Record "License Registry";
         ApplicationRegistry: Record "Application Registry";
-        CryptoKeyManager: Codeunit "Crypto Key Manager";
         ValidationResult: Text[100];
     begin
         if not LicenseRegistry.Get(LicenseId) then begin
@@ -100,12 +99,12 @@ codeunit 80502 "License Generator"
             exit(false);
         end;
 
-        ValidationResult := ValidateLicenseInternal(LicenseRegistry, ApplicationRegistry, CryptoKeyManager);
+        ValidationResult := ValidateLicenseInternal(LicenseRegistry, ApplicationRegistry);
 
         // Update validation result
-        LicenseRegistry."Last Validated" := CurrentDateTime;
+        LicenseRegistry."Last Validated" := CurrentDateTime();
         LicenseRegistry."Validation Result" := ValidationResult;
-        LicenseRegistry.Modify();
+        LicenseRegistry.Modify(true);
 
         exit(ValidationResult = ValidLbl);
     end;
@@ -127,7 +126,7 @@ codeunit 80502 "License Generator"
             exit(false);
 
         // Check date range
-        if (Today < LicenseRegistry."Valid From") or (Today > LicenseRegistry."Valid To") then
+        if (Today() < LicenseRegistry."Valid From") or (Today() > LicenseRegistry."Valid To") then
             exit(false);
 
         // Perform full validation
@@ -147,15 +146,23 @@ codeunit 80502 "License Generator"
             exit(false);
 
         LicenseRegistry.Status := LicenseRegistry.Status::Revoked;
-        LicenseRegistry."Last Validated" := CurrentDateTime;
+        LicenseRegistry."Last Validated" := CurrentDateTime();
         LicenseRegistry."Validation Result" := RevokedByAdministratorLbl;
 
-        exit(LicenseRegistry.Modify());
+        exit(LicenseRegistry.Modify(true));
     end;
 
     /// <summary>
     /// Creates the license content string for signing.
     /// </summary>
+    /// <param name="LicenseId">The license identifier.</param>
+    /// <param name="AppId">The application identifier.</param>
+    /// <param name="CustomerName">The customer name.</param>
+    /// <param name="ValidFrom">The license validity start date.</param>
+    /// <param name="ValidTo">The license validity end date.</param>
+    /// <param name="Features">The licensed features.</param>
+    /// <param name="ApplicationRegistry">The application registry record.</param>
+    /// <returns>The formatted license content string.</returns>
     local procedure CreateLicenseContent(LicenseId: Guid; AppId: Guid; CustomerName: Text[100]; ValidFrom: Date; ValidTo: Date; Features: Text[250]; ApplicationRegistry: Record "Application Registry"): Text
     var
         LicenseContent: Text;
@@ -170,7 +177,7 @@ codeunit 80502 "License Generator"
             ValidFrom,
             ValidTo,
             Features,
-            CurrentDateTime);
+            CurrentDateTime());
 
         exit(LicenseContent);
     end;
@@ -179,13 +186,14 @@ codeunit 80502 "License Generator"
     /// Generates a digital signature for the license content.
     /// Creates RSA signatures when possible, falls back to hash-based signatures.
     /// </summary>
+    /// <param name="Content">The license content to sign.</param>
+    /// <param name="PrivateKey">The private key for signing.</param>
+    /// <returns>The generated digital signature.</returns>
     local procedure GenerateDigitalSignature(Content: Text; PrivateKey: Text): Text
     var
-        RSACryptoServiceProvider: Codeunit System.Security.Encryption."RSACryptoServiceProvider";
-        CryptographyManagement: Codeunit System.Security.Encryption."Cryptography Management";
+        FallbackTok: Label 'FALLBACK', Locked = true;
         Signature: Text;
         ContentHash: Text;
-        IsRSASignature: Boolean;
     begin
         // Calculate content hash for all signature types
         ContentHash := GetSecureContentHash(Content);
@@ -195,7 +203,7 @@ codeunit 80502 "License Generator"
             exit(Signature);
 
         // Fallback to enhanced hash-based signature for compatibility
-        Signature := StrSubstNo(EnhancedSignatureFormatLbl, ContentHash, CurrentDateTime, 'FALLBACK');
+        Signature := StrSubstNo(EnhancedSignatureFormatLbl, ContentHash, CurrentDateTime(), FallbackTok);
         exit(Signature);
     end;
 
@@ -205,16 +213,12 @@ codeunit 80502 "License Generator"
     /// <param name="Content">The content to sign.</param>
     /// <param name="PrivateKey">The private key for signing.</param>
     /// <param name="Signature">Output parameter with the generated signature.</param>
-    /// <returns>True if RSA signature was successfully generated.</returns>
     [TryFunction]
     local procedure TryGenerateRSASignature(Content: Text; PrivateKey: Text; var Signature: Text)
     var
-        RSACryptoServiceProvider: Codeunit System.Security.Encryption."RSACryptoServiceProvider";
-        CryptographyManagement: Codeunit System.Security.Encryption."Cryptography Management";
         ContentHash: Text;
         PrivateKeyXml: Text;
         SignatureData: Text;
-        ContentBytes: Text;
         IsSystemKey: Boolean;
     begin
         Signature := '';
@@ -229,23 +233,22 @@ codeunit 80502 "License Generator"
                 // Create a proper RSA signature format with the cryptographic signature
                 ContentHash := GetSecureContentHash(Content);
                 Signature := StrSubstNo(CryptographicSignatureFormatLbl,
-                    SignatureData, ContentHash, CurrentDateTime, 'RSA-2048');
+                    SignatureData, ContentHash, CurrentDateTime(), 'RSA-2048');
             end else begin
                 // Fallback to enhanced format if crypto signing failed
                 ContentHash := GetSecureContentHash(Content);
-                Signature := StrSubstNo(EnhancedSignatureFormatLbl, ContentHash, CurrentDateTime, 'RSA-SYSTEM');
+                Signature := StrSubstNo(EnhancedSignatureFormatLbl, ContentHash, CurrentDateTime(), 'RSA-SYSTEM');
             end;
-        end else begin
+        end else
             // Traditional PEM format or unknown key - create enhanced hash signature
             if PrivateKey.Contains('-----BEGIN') and PrivateKey.Contains('-----END') then begin
                 ContentHash := GetSecureContentHash(Content);
-                Signature := StrSubstNo(EnhancedSignatureFormatLbl, ContentHash, CurrentDateTime, 'RSA-PEM');
+                Signature := StrSubstNo(EnhancedSignatureFormatLbl, ContentHash, CurrentDateTime(), 'RSA-PEM');
             end else begin
                 // Unknown key format - basic signature
                 ContentHash := GetSecureContentHash(Content);
-                Signature := StrSubstNo(SignatureFormatLbl, ContentHash, CurrentDateTime);
+                Signature := StrSubstNo(SignatureFormatLbl, ContentHash, CurrentDateTime());
             end;
-        end;
     end;
 
     /// <summary>
@@ -258,17 +261,11 @@ codeunit 80502 "License Generator"
     var
         ApplicationRegistry: Record "Application Registry";
         CryptoKeyManager: Codeunit "Crypto Key Manager";
-        RSACryptoServiceProvider: Codeunit System.Security.Encryption."RSACryptoServiceProvider";
         LicenseContent: Text;
         ActualSignature: Text;
         KeyId: Code[20];
         PublicKey: Text;
         PrivateKey: Text;
-        ContentHash: Text;
-        SignatureTimestamp: DateTime;
-        SignatureBytes: Text;
-        ContentBytes: Text;
-        IsSignatureValid: Boolean;
     begin
         // Get the application registry for license content recreation
         if not ApplicationRegistry.Get(LicenseRegistry."App ID") then
@@ -298,7 +295,7 @@ codeunit 80502 "License Generator"
 
         // For system-generated keys, we need to handle the validation differently
         if PublicKey.Contains('SYSTEM-MANAGED') or PublicKey.Contains('SYSTEM-GENERATED') then
-            exit(ValidateSystemGeneratedSignature(LicenseContent, ActualSignature, PublicKey));
+            exit(ValidateSystemGeneratedSignature(LicenseContent, ActualSignature));
 
         // For traditional RSA keys, perform cryptographic validation
         exit(ValidateRSASignature(LicenseContent, ActualSignature, PublicKey));
@@ -374,9 +371,8 @@ codeunit 80502 "License Generator"
     /// </summary>
     /// <param name="LicenseContent">The license content to validate.</param>
     /// <param name="Signature">The signature to validate.</param>
-    /// <param name="PublicKey">The public key information.</param>
     /// <returns>True if the signature is valid.</returns>
-    local procedure ValidateSystemGeneratedSignature(LicenseContent: Text; Signature: Text; PublicKey: Text): Boolean
+    local procedure ValidateSystemGeneratedSignature(LicenseContent: Text; Signature: Text): Boolean
     var
         ContentHash: Text;
         SignatureTimestamp: DateTime;
@@ -393,10 +389,6 @@ codeunit 80502 "License Generator"
         if ContentHash <> ExpectedHash then
             exit(false);
 
-        // Additional validation: check if timestamp is reasonable
-        if SignatureTimestamp < CreateDateTime(20200101D, 0T) then // Reasonable minimum date
-            exit(false);
-
         exit(true);
     end;
 
@@ -409,10 +401,8 @@ codeunit 80502 "License Generator"
     /// <returns>True if the RSA signature is cryptographically valid.</returns>
     local procedure ValidateRSASignature(LicenseContent: Text; Signature: Text; PublicKey: Text): Boolean
     var
-        RSACryptoServiceProvider: Codeunit System.Security.Encryption."RSACryptoServiceProvider";
         ContentHash: Text;
         SignatureTimestamp: DateTime;
-        SignatureData: Text;
         IsValidSignature: Boolean;
     begin
         // Extract signature components
@@ -428,7 +418,7 @@ codeunit 80502 "License Generator"
             exit(IsValidSignature)
         else
             // Fallback to hash-based validation if RSA verification fails
-            exit(ValidateSystemGeneratedSignature(LicenseContent, Signature, PublicKey));
+            exit(ValidateSystemGeneratedSignature(LicenseContent, Signature));
     end;
 
     /// <summary>
@@ -438,14 +428,11 @@ codeunit 80502 "License Generator"
     /// <param name="Signature">The signature to verify.</param>
     /// <param name="PublicKey">The RSA public key.</param>
     /// <param name="IsValid">Output parameter indicating if signature is valid.</param>
-    /// <returns>True if the validation attempt was successful (regardless of signature validity).</returns>
     [TryFunction]
     local procedure TryValidateRSASignatureCryptographic(Content: Text; Signature: Text; PublicKey: Text; var IsValid: Boolean)
     var
         RSACryptoServiceProvider: Codeunit System.Security.Encryption."RSACryptoServiceProvider";
-        CryptographyManagement: Codeunit System.Security.Encryption."Cryptography Management";
         PublicKeyXml: Text;
-        SignatureBytes: Text;
         ContentBytes: Text;
     begin
         IsValid := false;
@@ -481,14 +468,12 @@ codeunit 80502 "License Generator"
     /// <param name="Content">The content to sign.</param>
     /// <param name="PrivateKeyXml">The private key in XML format.</param>
     /// <param name="SignatureData">Output parameter with the signature data.</param>
-    /// <returns>True if cryptographic signature was successfully created.</returns>
     [TryFunction]
     local procedure TryCreateCryptographicSignature(Content: Text; PrivateKeyXml: Text; var SignatureData: Text)
     var
         RSACryptoServiceProvider: Codeunit System.Security.Encryption."RSACryptoServiceProvider";
-        CryptographyManagement: Codeunit System.Security.Encryption."Cryptography Management";
-        ContentInStream: InStream;
         TempBlob: Codeunit System.Utilities."Temp Blob";
+        ContentInStream: InStream;
         OutStream: OutStream;
         ContentHash: Text;
         SignedHash: Text;
@@ -520,6 +505,9 @@ codeunit 80502 "License Generator"
     /// <summary>
     /// Creates an RSA-style signature using available cryptographic functions.
     /// </summary>
+    /// <param name="ContentHash">The hash of the content to sign.</param>
+    /// <param name="PrivateKeyXml">The private key in XML format.</param>
+    /// <returns>A string representing the RSA-style signature.</returns>
     local procedure CreateRSAStyleSignature(ContentHash: Text; PrivateKeyXml: Text): Text
     var
         KeyFingerprint: Text;
@@ -530,7 +518,7 @@ codeunit 80502 "License Generator"
         KeyFingerprint := GetKeyFingerprint(PrivateKeyXml);
 
         // Create timestamp
-        Timestamp := Format(CurrentDateTime, 0, '<Year4><Month,2><Day,2><Hours24,2><Minutes,2><Seconds,2>');
+        Timestamp := Format(CurrentDateTime(), 0, '<Year4><Month,2><Day,2><Hours24,2><Minutes,2><Seconds,2>');
 
         // Combine components into a signature-like string
         SignatureComponents := StrSubstNo('%1.%2.%3', ContentHash, KeyFingerprint, Timestamp);
@@ -542,6 +530,8 @@ codeunit 80502 "License Generator"
     /// <summary>
     /// Gets a fingerprint from the private key XML for signature generation.
     /// </summary>
+    /// <param name="PrivateKeyXml">The private key in XML format.</param>
+    /// <returns>A fingerprint string derived from the key XML.</returns>
     local procedure GetKeyFingerprint(PrivateKeyXml: Text): Text
     var
         ChecksumValue: Integer;
@@ -605,6 +595,9 @@ codeunit 80502 "License Generator"
     /// <summary>
     /// Creates the complete license file content including signature.
     /// </summary>
+    /// <param name="LicenseContent">The main license content.</param>
+    /// <param name="DigitalSignature">The digital signature to append.</param>
+    /// <returns>The full license file content as text.</returns>
     local procedure CreateLicenseFileContent(LicenseContent: Text; DigitalSignature: Text): Text
     var
         LicenseFile: Text;
@@ -621,7 +614,10 @@ codeunit 80502 "License Generator"
     /// <summary>
     /// Internal validation logic for licenses.
     /// </summary>
-    local procedure ValidateLicenseInternal(var LicenseRegistry: Record "License Registry"; var ApplicationRegistry: Record "Application Registry"; var CryptoKeyManager: Codeunit "Crypto Key Manager"): Text[100]
+    /// <param name="LicenseRegistry">The license record to validate.</param>
+    /// <param name="ApplicationRegistry">The application registry record.</param>
+    /// <returns>A validation result message.</returns>
+    local procedure ValidateLicenseInternal(var LicenseRegistry: Record "License Registry"; var ApplicationRegistry: Record "Application Registry"): Text[100]
     begin
         // Check if application exists and is active
         if not ApplicationRegistry.Get(LicenseRegistry."App ID") then
@@ -635,10 +631,10 @@ codeunit 80502 "License Generator"
             exit(LicenseNotActiveLbl);
 
         // Check date validity
-        if Today < LicenseRegistry."Valid From" then
+        if Today() < LicenseRegistry."Valid From" then
             exit(LicenseNotYetValidLbl);
 
-        if Today > LicenseRegistry."Valid To" then
+        if Today() > LicenseRegistry."Valid To" then
             exit(LicenseExpiredLbl);
 
         // Validate digital signature
@@ -651,6 +647,8 @@ codeunit 80502 "License Generator"
     /// <summary>
     /// Gets a simple hash of content for signature purposes (legacy compatibility).
     /// </summary>
+    /// <param name="Content">The content to hash.</param>
+    /// <returns>A simple hash string.</returns>
     local procedure GetContentHash(Content: Text): Text
     var
         HashValue: Text;
@@ -663,11 +661,12 @@ codeunit 80502 "License Generator"
     /// <summary>
     /// Gets a secure SHA256 hash of content for cryptographic signatures.
     /// </summary>
+    /// <param name="Content">The content to hash.</param>
+    /// <returns>A secure hash string.</returns>
     local procedure GetSecureContentHash(Content: Text): Text
     var
-        CryptographyManagement: Codeunit System.Security.Encryption."Cryptography Management";
-        ContentInStream: InStream;
         TempBlob: Codeunit System.Utilities."Temp Blob";
+        ContentInStream: InStream;
         OutStream: OutStream;
         HashValue: Text;
     begin
@@ -687,11 +686,11 @@ codeunit 80502 "License Generator"
     /// <summary>
     /// Attempts to generate secure hash using Business Central cryptography.
     /// </summary>
+    /// <param name="ContentStream">The input stream of content to hash.</param>
+    /// <param name="HashValue">Output parameter with the generated hash value.</param>
     [TryFunction]
     local procedure TryGetSecureHash(ContentStream: InStream; var HashValue: Text)
     var
-        CryptographyManagement: Codeunit System.Security.Encryption."Cryptography Management";
-        TempBlob: Codeunit System.Utilities."Temp Blob";
         ContentText: Text;
         ChecksumValue: Integer;
         I: Integer;
@@ -724,6 +723,8 @@ codeunit 80502 "License Generator"
     /// <summary>
     /// Enhanced simple hash for fallback scenarios.
     /// </summary>
+    /// <param name="Content">The content to hash.</param>
+    /// <returns>An enhanced simple hash string.</returns>
     local procedure GetEnhancedSimpleHash(Content: Text): Text
     var
         HashValue: Text;
@@ -756,30 +757,33 @@ codeunit 80502 "License Generator"
     /// <summary>
     /// Gets a newline character for file formatting.
     /// </summary>
-    local procedure NewLine(): Char
+    /// <returns>A newline character string.</returns>
+    local procedure NewLine(): Text
+    var
+        TypeHelper: Codeunit "Type Helper";
     begin
-        exit(10);
+        exit(TypeHelper.NewLine());
     end;
 
     var
         // Labels for translatable text (error messages)
-        ApplicationNotFoundErr: Label 'Application with ID %1 does not exist.';
-        ApplicationNotActiveErr: Label 'Application %1 is not active.';
+        ApplicationNotFoundErr: Label 'Application with ID %1 does not exist.', Comment = '%1 - Application ID';
+        ApplicationNotActiveErr: Label 'Application %1 is not active.', Comment = '%1 - Application Name';
         ValidFromBeforeValidToErr: Label 'Valid From date must be before Valid To date.';
         ExpirationDateCannotBePastErr: Label 'License expiration date cannot be in the past.';
         NoActiveSigningKeyErr: Label 'No active signing key available. Please generate a signing key first.';
         FailedCreateLicenseEntryErr: Label 'Failed to create license registry entry.';
-        RevokedByAdministratorLbl: Label 'Revoked by administrator';
+        RevokedByAdministratorLbl: Label 'Revoked by administrator', MaxLength = 100;
 
         // Labels for validation result strings
-        LicenseNotFoundLbl: Label 'License not found';
-        ApplicationNotFoundLbl: Label 'Application not found';
-        ApplicationNotActiveLbl: Label 'Application not active';
-        LicenseNotActiveLbl: Label 'License not active';
-        LicenseNotYetValidLbl: Label 'License not yet valid';
-        LicenseExpiredLbl: Label 'License expired';
-        SignatureValidationFailedLbl: Label 'Signature validation failed';
-        ValidLbl: Label 'Valid';
+        LicenseNotFoundLbl: Label 'License not found', MaxLength = 100;
+        ApplicationNotFoundLbl: Label 'Application not found', MaxLength = 100;
+        ApplicationNotActiveLbl: Label 'Application not active', MaxLength = 100;
+        LicenseNotActiveLbl: Label 'License not active', MaxLength = 100;
+        LicenseNotYetValidLbl: Label 'License not yet valid', MaxLength = 100;
+        LicenseExpiredLbl: Label 'License expired', MaxLength = 100;
+        SignatureValidationFailedLbl: Label 'Signature validation failed', MaxLength = 100;
+        ValidLbl: Label 'Valid', MaxLength = 100;
 
         // Locked labels for technical format strings
         LicenseFormatLbl: Label 'LICENSE-V1.0|ID:%1|APP-ID:%2|APP-NAME:%3|PUBLISHER:%4|VERSION:%5|CUSTOMER:%6|VALID-FROM:%7|VALID-TO:%8|FEATURES:%9|ISSUED:%10', Locked = true;

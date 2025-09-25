@@ -21,19 +21,21 @@ table 80501 "License Registry"
         field(1; "License ID"; Guid)
         {
             Caption = 'License ID';
-            DataClassification = SystemMetadata;
+            ToolTip = 'Unique identifier for the license.';
             NotBlank = true;
         }
         field(2; "App ID"; Guid)
         {
             Caption = 'Application ID';
-            DataClassification = SystemMetadata;
+            ToolTip = 'Unique identifier for the application.';
+            AllowInCustomizations = Never;
             TableRelation = "Application Registry"."App ID";
             NotBlank = true;
         }
         field(3; "App Name"; Text[100])
         {
             Caption = 'Application Name';
+            ToolTip = 'Name of the registered application.';
             CalcFormula = lookup("Application Registry"."App Name" where("App ID" = field("App ID")));
             Editable = false;
             FieldClass = FlowField;
@@ -41,66 +43,70 @@ table 80501 "License Registry"
         field(4; "Customer Name"; Text[100])
         {
             Caption = 'Customer Name';
+            ToolTip = 'Name of the customer to whom the license is issued.';
             DataClassification = CustomerContent;
             NotBlank = true;
         }
         field(5; "Valid From"; Date)
         {
             Caption = 'Valid From';
-            DataClassification = SystemMetadata;
+            ToolTip = 'Start date of the license validity period.';
             NotBlank = true;
         }
         field(6; "Valid To"; Date)
         {
             Caption = 'Valid To';
-            DataClassification = SystemMetadata;
+            ToolTip = 'End date of the license validity period.';
             NotBlank = true;
         }
-        field(7; "Features"; Text[250])
+        field(7; Features; Text[250])
         {
             Caption = 'Licensed Features';
-            DataClassification = SystemMetadata;
+            ToolTip = 'Features enabled by this license.';
         }
         field(8; "License File"; Blob)
         {
             Caption = 'License File';
-            DataClassification = SystemMetadata;
+            ToolTip = 'The actual license file content.';
         }
         field(9; "Digital Signature"; Text[1024])
         {
             Caption = 'Digital Signature';
-            DataClassification = SystemMetadata;
+            ToolTip = 'Digital signature of the license for integrity verification.';
+            AllowInCustomizations = Never;
             Editable = false;
         }
-        field(10; "Status"; Enum "License Status")
+        field(10; Status; Enum "License Status")
         {
             Caption = 'Status';
-            DataClassification = SystemMetadata;
+            ToolTip = 'Current status of the license.';
             InitValue = Active;
         }
         field(11; "Created Date"; DateTime)
         {
             Caption = 'Created Date';
-            DataClassification = SystemMetadata;
+            ToolTip = 'Date and time when the license was created.';
             Editable = false;
         }
         field(12; "Created By"; Code[50])
         {
             Caption = 'Created By';
+            ToolTip = 'User who created the license.';
             DataClassification = EndUserIdentifiableInformation;
+            AllowInCustomizations = Never;
             Editable = false;
             TableRelation = User."User Name";
         }
         field(13; "Last Validated"; DateTime)
         {
             Caption = 'Last Validated';
-            DataClassification = SystemMetadata;
+            ToolTip = 'Date and time when the license was last validated.';
             Editable = false;
         }
         field(14; "Validation Result"; Text[100])
         {
             Caption = 'Last Validation Result';
-            DataClassification = SystemMetadata;
+            ToolTip = 'Result of the last license validation.';
             Editable = false;
         }
     }
@@ -118,17 +124,19 @@ table 80501 "License Registry"
         {
         }
     }
-
+    fieldgroups
+    {
+        fieldgroup(DropDown; "App Name", "Customer Name", "Valid From", "Valid To", Status)
+        {
+        }
+        fieldgroup(Brick; "App Name", "Customer Name", "Valid From", "Valid To")
+        {
+        }
+    }
     trigger OnInsert()
     begin
-        "Created Date" := CurrentDateTime;
-        "Created By" := CopyStr(UserId, 1, MaxStrLen("Created By"));
+        "Created Date" := CurrentDateTime();
+        "Created By" := CopyStr(UserId(), 1, MaxStrLen("Created By"));
     end;
 
-    trigger OnDelete()
-    var
-        LicenseMgmt: Codeunit "License Management";
-    begin
-        LicenseMgmt.OnLicenseDeleted("License ID");
-    end;
 }

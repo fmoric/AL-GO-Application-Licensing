@@ -19,6 +19,7 @@ table 80500 "Application Registry"
         field(1; "App ID"; Guid)
         {
             Caption = 'Application ID';
+            ToolTip = 'Specifies the unique identifier for the application.';
             TableRelation = "NAV App Installed App"."App ID";
             ValidateTableRelation = false;
             NotBlank = true;
@@ -34,41 +35,42 @@ table 80500 "Application Registry"
         field(2; "App Name"; Text[100])
         {
             Caption = 'Application Name';
-
+            ToolTip = 'Specifies the name of the application.';
             NotBlank = true;
         }
-        field(3; "Publisher"; Text[100])
+        field(3; Publisher; Text[100])
         {
             Caption = 'Publisher';
-
+            ToolTip = 'Specifies the publisher of the application.';
             NotBlank = true;
         }
-        field(4; "Version"; Text[20])
+        field(4; Version; Text[20])
         {
             Caption = 'Version';
-
+            ToolTip = 'Specifies the version of the application.';
             NotBlank = true;
         }
-        field(5; "Description"; Text[250])
+        field(5; Description; Text[250])
         {
             Caption = 'Description';
-
+            ToolTip = 'Specifies an optional description for the application.';
         }
-        field(6; "Active"; Boolean)
+        field(6; Active; Boolean)
         {
             Caption = 'Active';
-
+            ToolTip = 'Specifies whether the application is active and can have licenses generated.';
             InitValue = true;
         }
         field(7; "Created Date"; DateTime)
         {
             Caption = 'Created Date';
-
+            ToolTip = 'Specifies when the application was created.';
             Editable = false;
         }
         field(8; "Created By"; Code[50])
         {
             Caption = 'Created By';
+            ToolTip = 'Specifies who created the application.';
             DataClassification = EndUserIdentifiableInformation;
             Editable = false;
             TableRelation = User."User Name";
@@ -76,12 +78,13 @@ table 80500 "Application Registry"
         field(9; "Last Modified Date"; DateTime)
         {
             Caption = 'Last Modified Date';
-
+            ToolTip = 'Specifies when the application was last modified.';
             Editable = false;
         }
         field(10; "Last Modified By"; Code[50])
         {
             Caption = 'Last Modified By';
+            ToolTip = 'Specifies who last modified the application.';
             DataClassification = EndUserIdentifiableInformation;
             Editable = false;
             TableRelation = User."User Name";
@@ -98,19 +101,29 @@ table 80500 "Application Registry"
         {
         }
     }
+    fieldgroups
+    {
+        fieldgroup(DropDown; "App Name", Publisher, Version, Active)
+        {
 
+        }
+        fieldgroup(Brick; "App Name", Publisher, Version, Active)
+        {
+
+        }
+    }
     trigger OnInsert()
     begin
-        "Created Date" := CurrentDateTime;
-        "Created By" := CopyStr(UserId, 1, MaxStrLen("Created By"));
+        "Created Date" := CurrentDateTime();
+        "Created By" := CopyStr(UserId(), 1, MaxStrLen("Created By"));
         "Last Modified Date" := "Created Date";
         "Last Modified By" := "Created By";
     end;
 
     trigger OnModify()
     begin
-        "Last Modified Date" := CurrentDateTime;
-        "Last Modified By" := CopyStr(UserId, 1, MaxStrLen("Last Modified By"));
+        "Last Modified Date" := CurrentDateTime();
+        "Last Modified By" := CopyStr(UserId(), 1, MaxStrLen("Last Modified By"));
     end;
 
     /// <summary>

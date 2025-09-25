@@ -25,37 +25,36 @@ page 80500 "Application Registry"
             {
                 field("App ID"; Rec."App ID")
                 {
-                    ApplicationArea = All;
                     ToolTip = 'Specifies the unique application identifier.';
                 }
                 field("App Name"; Rec."App Name")
                 {
-                    ApplicationArea = All;
+
                     ToolTip = 'Specifies the application name.';
                 }
                 field(Publisher; Rec.Publisher)
                 {
-                    ApplicationArea = All;
+
                     ToolTip = 'Specifies the publisher name.';
                 }
                 field(Version; Rec.Version)
                 {
-                    ApplicationArea = All;
+
                     ToolTip = 'Specifies the application version.';
                 }
                 field(Active; Rec.Active)
                 {
-                    ApplicationArea = All;
+
                     ToolTip = 'Specifies whether the application is active.';
                 }
                 field("Created Date"; Rec."Created Date")
                 {
-                    ApplicationArea = All;
+
                     ToolTip = 'Specifies when the application was registered.';
                 }
                 field("Created By"; Rec."Created By")
                 {
-                    ApplicationArea = All;
+
                     ToolTip = 'Specifies who registered the application.';
                 }
             }
@@ -64,7 +63,7 @@ page 80500 "Application Registry"
         {
             part(LicenseInfo; "Application License FactBox")
             {
-                ApplicationArea = All;
+
                 SubPageLink = "App ID" = field("App ID");
             }
         }
@@ -76,7 +75,7 @@ page 80500 "Application Registry"
         {
             action(NewApplication)
             {
-                ApplicationArea = All;
+
                 Caption = 'New Application';
                 Image = New;
                 ToolTip = 'Register a new application.';
@@ -92,7 +91,7 @@ page 80500 "Application Registry"
             }
             action(GenerateLicense)
             {
-                ApplicationArea = All;
+
                 Caption = 'Generate License';
                 Image = Certificate;
                 ToolTip = 'Generate a new license for this application.';
@@ -108,7 +107,7 @@ page 80500 "Application Registry"
             }
             action(ViewLicenses)
             {
-                ApplicationArea = All;
+
                 Caption = 'View Licenses';
                 Image = ViewDetails;
                 ToolTip = 'View all licenses for this application.';
@@ -131,12 +130,9 @@ page 80500 "Application Registry"
 
     trigger OnOpenPage()
     var
-        LicenseManagement: Codeunit "License Management";
+        LicenseManagementCU: Codeunit "License Management";
     begin
         // Initialize licensing system if needed
-        LicenseManagement.InitializeLicensingSystem();
+        LicenseManagementCU.InitializeLicensingSystem();
     end;
-
-    var
-        LicenseManagement: Codeunit "License Management";
 }

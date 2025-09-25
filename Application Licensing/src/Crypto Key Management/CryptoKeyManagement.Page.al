@@ -75,8 +75,8 @@ page 80506 "Crypto Key Management"
                     KeyId: Text;
                     ExpirationDate: Date;
                 begin
-                    KeyId := StrSubstNo(KeyIdSigningFormatLbl, Format(CurrentDateTime, 0, KeyIdDateFormatLbl));
-                    ExpirationDate := CalcDate('<+5Y>', Today);
+                    KeyId := StrSubstNo(KeyIdSigningFormatLbl, Format(CurrentDateTime(), 0, KeyIdDateFormatLbl));
+                    ExpirationDate := CalcDate('<+5Y>', Today());
 
                     if CryptoKeyManager.GenerateKeyPair(CopyStr(KeyId, 1, 20), "Crypto Key Type"::"Signing Key", ExpirationDate) then begin
                         Message(SigningKeyGeneratedMsg, KeyId);
@@ -97,9 +97,8 @@ page 80506 "Crypto Key Management"
 
                 trigger OnAction()
                 var
-                    CryptoKeyManager: Codeunit "Crypto Key Manager";
                     NewCryptoKeyStorage: Record "Crypto Key Storage";
-                    KeyId: Text;
+                    CryptoKeyManager: Codeunit "Crypto Key Manager";
                 begin
                     CryptoKeyManager.UploadAndValidateCertificate(NewCryptoKeyStorage);
                 end;
@@ -117,8 +116,8 @@ page 80506 "Crypto Key Management"
                     KeyId: Text;
                     ExpirationDate: Date;
                 begin
-                    KeyId := StrSubstNo(KeyIdValidationFormatLbl, Format(CurrentDateTime, 0, KeyIdDateFormatLbl));
-                    ExpirationDate := CalcDate('<+5Y>', Today);
+                    KeyId := StrSubstNo(KeyIdValidationFormatLbl, Format(CurrentDateTime(), 0, KeyIdDateFormatLbl));
+                    ExpirationDate := CalcDate('<+5Y>', Today());
 
                     if CryptoKeyManager.GenerateKeyPair(CopyStr(KeyId, 1, 20), "Crypto Key Type"::"Validation Key", ExpirationDate) then begin
                         Message(ValidationKeyGeneratedMsg, KeyId);
@@ -139,13 +138,15 @@ page 80506 "Crypto Key Management"
                 var
                     CryptoKeyManager: Codeunit "Crypto Key Manager";
                 begin
-                    if Confirm(ConfirmDeactivateKeyQst, false, Rec."Key ID") then begin
-                        if CryptoKeyManager.DeactivateKey(Rec."Key ID") then begin
-                            Message(KeyDeactivatedSuccessMsg);
-                            CurrPage.Update(false);
-                        end else
-                            Error(FailedDeactivateKeyErr);
-                    end;
+                    if not Confirm(ConfirmDeactivateKeyQst, false, Rec."Key ID") then
+                        exit;
+
+                    if CryptoKeyManager.DeactivateKey(Rec."Key ID") then
+                        Message(KeyDeactivatedSuccessMsg)
+                    else
+                        Error(FailedDeactivateKeyErr);
+
+                    CurrPage.Update(false);
                 end;
             }
         }
@@ -170,14 +171,14 @@ page 80506 "Crypto Key Management"
                     else
                         StatusMessage += SigningKeyNotAvailableLbl + NewLine();
 
-                    StatusMessage += StrSubstNo(TotalKeysLbl, Rec.Count) + NewLine();
+                    StatusMessage += StrSubstNo(TotalKeysLbl, Rec.Count()) + NewLine();
 
                     Rec.SetRange(Active, true);
-                    StatusMessage += StrSubstNo(ActiveKeysLbl, Rec.Count) + NewLine();
+                    StatusMessage += StrSubstNo(ActiveKeysLbl, Rec.Count()) + NewLine();
 
                     Rec.SetRange(Active);
                     Rec.SetRange("Key Type", Rec."Key Type"::"Signing Key");
-                    StatusMessage += StrSubstNo(SigningKeysLbl, Rec.Count) + NewLine();
+                    StatusMessage += StrSubstNo(SigningKeysLbl, Rec.Count()) + NewLine();
 
                     Message(StatusMessage);
                     Rec.SetRange("Key Type");
@@ -188,14 +189,12 @@ page 80506 "Crypto Key Management"
     }
     trigger OnAfterGetCurrRecord()
     begin
-        if Rec."Expires Date" < Today then
+        if Rec."Expires Date" < Today() then
             ValidToExpr := Format(PageStyle::Unfavorable)
         else
             ValidToExpr := Format(PageStyle::None);
     end;
-    /// <summary>
-    /// Gets a newline character for formatting.
-    /// </summary>
+
     local procedure NewLine(): Text
     var
         TypeHelper: Codeunit "Type Helper";
@@ -210,13 +209,13 @@ page 80506 "Crypto Key Management"
         CryptoSystemStatusLbl: Label 'Cryptographic System Status:';
         SigningKeyAvailableLbl: Label 'Signing Key: Available';
         SigningKeyNotAvailableLbl: Label 'Signing Key: NOT AVAILABLE';
-        TotalKeysLbl: Label 'Total Keys: %1';
-        ActiveKeysLbl: Label 'Active Keys: %1';
-        SigningKeysLbl: Label 'Signing Keys: %1';
-        SigningKeyGeneratedMsg: Label 'Signing key generated successfully: %1';
-        ValidationKeyGeneratedMsg: Label 'Validation key generated successfully: %1';
+        TotalKeysLbl: Label 'Total Keys: %1', Comment = '%1 = Number of total keys';
+        ActiveKeysLbl: Label 'Active Keys: %1', Comment = '%1 = Number of active keys';
+        SigningKeysLbl: Label 'Signing Keys: %1', Comment = '%1 = Number of signing keys';
+        SigningKeyGeneratedMsg: Label 'Signing key generated successfully: %1', Comment = '%1 = Key ID';
+        ValidationKeyGeneratedMsg: Label 'Validation key generated successfully: %1', Comment = '%1 = Key ID';
         KeyDeactivatedSuccessMsg: Label 'Key deactivated successfully.';
-        ConfirmDeactivateKeyQst: Label 'Are you sure you want to deactivate key %1?';
+        ConfirmDeactivateKeyQst: Label 'Are you sure you want to deactivate key %1?', Comment = '%1 = Key ID';
         FailedGenerateSigningKeyErr: Label 'Failed to generate signing key.';
         FailedGenerateValidationKeyErr: Label 'Failed to generate validation key.';
         FailedDeactivateKeyErr: Label 'Failed to deactivate key.';
@@ -224,10 +223,5 @@ page 80506 "Crypto Key Management"
         // Locked labels for technical strings
         KeyIdSigningFormatLbl: Label 'SIGN-KEY-%1', Locked = true;
         KeyIdValidationFormatLbl: Label 'VALID-KEY-%1', Locked = true;
-        KeyIdUploadFormatLbl: Label 'CERT-%1', Locked = true;
         KeyIdDateFormatLbl: Label '<Year4><Month,2><Day,2><Hours24><Minutes,2>', Locked = true;
-
-        // Additional labels for upload functionality
-        CertificateUploadedSuccessMsg: Label 'Certificate uploaded successfully with Key ID: %1';
-        CertificateUploadFailedErr: Label 'Failed to upload certificate. Please check the file and password.';
 }

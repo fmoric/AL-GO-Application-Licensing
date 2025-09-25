@@ -2,6 +2,7 @@ namespace ApplicationLicensing.Pages;
 
 using ApplicationLicensing.Codeunit;
 using ApplicationLicensing.Tables;
+using System.Reflection;
 
 /// <summary>
 /// Page License Import (ID 80506).
@@ -15,6 +16,8 @@ page 80507 "License Import"
     InsertAllowed = false;
     DeleteAllowed = false;
     ModifyAllowed = false;
+    Permissions = tabledata "Application Registry" = r,
+                    tabledata "License Registry" = ir;
 
     layout
     {
@@ -25,9 +28,9 @@ page 80507 "License Import"
                 Caption = 'License File Import';
                 field(LicenseFileContent; LicenseFileContent)
                 {
-                    ApplicationArea = All;
+
                     Caption = 'License File Content';
-                    ToolTip = 'Paste the complete license file content here, including headers and signature.';
+                    ToolTip = 'Specifies the content of the license file to be imported. You can paste the content directly or use the "Import from File" button.';
                     MultiLine = true;
                     ShowMandatory = true;
 
@@ -41,9 +44,9 @@ page 80507 "License Import"
                 }
                 field(ImportFromFile; ImportFromFileVisible)
                 {
-                    ApplicationArea = All;
+
                     Caption = 'Import from File';
-                    ToolTip = 'Click to import license from a file.';
+                    ToolTip = 'Specifies the license file to import. Click the button to browse and select a file.';
                     Editable = false;
 
                     trigger OnAssistEdit()
@@ -59,66 +62,66 @@ page 80507 "License Import"
 
                 field(ParsedLicenseId; ParsedLicenseId)
                 {
-                    ApplicationArea = All;
+
                     Caption = 'License ID';
-                    ToolTip = 'The unique license identifier extracted from the file.';
+                    ToolTip = 'Specifies the unique identifier for this license.';
                     Editable = false;
                 }
                 field(ParsedAppId; ParsedAppId)
                 {
-                    ApplicationArea = All;
+
                     Caption = 'Application ID';
-                    ToolTip = 'The application identifier for this license.';
+                    ToolTip = 'Specifies the unique identifier of the application this license is for.';
                     Editable = false;
                 }
                 field(ParsedAppName; ParsedAppName)
                 {
-                    ApplicationArea = All;
+
                     Caption = 'Application Name';
-                    ToolTip = 'The application name from the license.';
+                    ToolTip = 'Specifies the name of the application this license is for.';
                     Editable = false;
                 }
                 field(ParsedCustomerName; ParsedCustomerName)
                 {
-                    ApplicationArea = All;
+
                     Caption = 'Customer Name';
-                    ToolTip = 'The customer name from the license.';
+                    ToolTip = 'Specifies the name of the customer to whom this license is issued.';
                     Editable = false;
                 }
                 field(ParsedValidFrom; ParsedValidFrom)
                 {
-                    ApplicationArea = All;
+
                     Caption = 'Valid From';
-                    ToolTip = 'The license validity start date.';
+                    ToolTip = 'Specifies the license validity start date.';
                     Editable = false;
                 }
                 field(ParsedValidTo; ParsedValidTo)
                 {
-                    ApplicationArea = All;
+
                     Caption = 'Valid To';
-                    ToolTip = 'The license validity end date.';
+                    ToolTip = 'Specifies the license validity end date.';
                     Editable = false;
                 }
                 field(ParsedFeatures; ParsedFeatures)
                 {
-                    ApplicationArea = All;
+
                     Caption = 'Licensed Features';
-                    ToolTip = 'The features included in this license.';
+                    ToolTip = 'Specifies the features enabled by this license.';
                     Editable = false;
                     MultiLine = true;
                 }
                 field(ParsedSignature; ParsedSignature)
                 {
-                    ApplicationArea = All;
+
                     Caption = 'Digital Signature';
-                    ToolTip = 'The digital signature of the license.';
+                    ToolTip = 'Specifies the digital signature of the license.';
                     Editable = false;
                 }
                 field(ValidationStatus; ValidationStatus)
                 {
-                    ApplicationArea = All;
+
                     Caption = 'Validation Status';
-                    ToolTip = 'The result of license validation.';
+                    ToolTip = 'Specifies the result of the license validation.';
                     Editable = false;
                     Style = Favorable;
                     StyleExpr = ValidationSuccess;
@@ -133,7 +136,7 @@ page 80507 "License Import"
         {
             action(ImportLicense)
             {
-                ApplicationArea = All;
+
                 Caption = 'Import License';
                 Image = Import;
                 ToolTip = 'Import the license into the system.';
@@ -147,7 +150,7 @@ page 80507 "License Import"
             }
             action(ValidateLicense)
             {
-                ApplicationArea = All;
+
                 Caption = 'Validate License';
                 Image = ValidateEmailLoggingSetup;
                 ToolTip = 'Validate the license signature and content.';
@@ -160,7 +163,7 @@ page 80507 "License Import"
             }
             action(ClearData)
             {
-                ApplicationArea = All;
+
                 Caption = 'Clear';
                 Image = ClearLog;
                 ToolTip = 'Clear all imported data and start over.';
@@ -172,7 +175,7 @@ page 80507 "License Import"
             }
             action(Cancel)
             {
-                ApplicationArea = All;
+
                 Caption = 'Cancel';
                 Image = Cancel;
                 ToolTip = 'Cancel the import operation.';
@@ -203,11 +206,10 @@ page 80507 "License Import"
         ImportFromFileVisible: Text[20];
 
         // Labels for translatable text
-        LicenseImportedSuccessMsg: Label 'License imported successfully.\\License ID: %1';
-        LicenseAlreadyExistsErr: Label 'A license with ID %1 already exists in the system.';
+        LicenseImportedSuccessMsg: Label 'License imported successfully.\\License ID: %1', Comment = '%1 = License ID';
+        LicenseAlreadyExistsErr: Label 'A license with ID %1 already exists in the system.', Comment = '%1 = License ID';
         InvalidLicenseFormatErr: Label 'Invalid license file format. Please check the file content.';
-        LicenseValidationFailedErr: Label 'License validation failed: %1';
-        ApplicationNotFoundWarning: Label 'Warning: Application %1 (%2) is not registered in the system.';
+        ApplicationNotFoundWarningMsg: Label 'Warning: Application %1 (%2) is not registered in the system.', Comment = '%1 = Application Name, %2 = Application ID';
         ConfirmImportInvalidLicenseQst: Label 'The license validation failed. Do you want to import it anyway?';
 
         // Locked labels for technical strings
@@ -237,7 +239,7 @@ page 80507 "License Import"
         if UploadIntoStream(ImportLicenseDialogLbl, '', ImportLicenseFileFilterLbl, FileName, InStream) then begin
             // Read the entire file content
             FileContent := '';
-            while not InStream.EOS do begin
+            while not InStream.EOS() do begin
                 InStream.ReadText(TempText);
                 if FileContent <> '' then
                     FileContent += '\' + TempText
@@ -260,19 +262,14 @@ page 80507 "License Import"
     var
         LicenseContent: Text;
         SignatureContent: Text;
-        LicenseData: Text;
     begin
         ClearImportData();
 
-        if not ExtractLicenseComponents(LicenseFileContent, LicenseContent, SignatureContent) then begin
+        if not ExtractLicenseComponents(LicenseFileContent, LicenseContent, SignatureContent) then
             Error(InvalidLicenseFormatErr);
-            exit;
-        end;
 
-        if not ParseLicenseContent(LicenseContent) then begin
+        if not ParseLicenseContent(LicenseContent) then
             Error(InvalidLicenseFormatErr);
-            exit;
-        end;
 
         ParsedSignature := CopyStr(SignatureContent, 1, MaxStrLen(ParsedSignature));
         ShowParsedData := true;
@@ -285,10 +282,13 @@ page 80507 "License Import"
     /// <summary>
     /// Extracts license content and signature from the license file.
     /// </summary>
+    /// <param name="FileContent">The full content of the license file.</param>
+    /// <param name="LicenseContent">Output parameter for the main license content.</param>
+    /// <param name="SignatureContent">Output parameter for the signature content.</param>
+    /// <returns>True if extraction was successful, false otherwise.</returns>
     local procedure ExtractLicenseComponents(FileContent: Text; var LicenseContent: Text; var SignatureContent: Text): Boolean
     var
         LicenseStartPos: Integer;
-        LicenseEndPos: Integer;
         SignatureStartPos: Integer;
         SignatureEndPos: Integer;
     begin
@@ -314,6 +314,8 @@ page 80507 "License Import"
     /// <summary>
     /// Parses the license content string and extracts individual fields.
     /// </summary>
+    /// <param name="LicenseContent">The main license content string.</param>
+    /// <returns>True if parsing was successful, false otherwise.</returns>
     local procedure ParseLicenseContent(LicenseContent: Text): Boolean
     var
         LicenseFields: List of [Text];
@@ -331,26 +333,7 @@ page 80507 "License Import"
                 FieldName := FieldPair.Substring(1, ColonPos - 1);
                 FieldValue := FieldPair.Substring(ColonPos + 1);
 
-                case FieldName of
-                    'ID':
-                        if not Evaluate(ParsedLicenseId, FieldValue) then
-                            exit(false);
-                    'APP-ID':
-                        if not Evaluate(ParsedAppId, FieldValue) then
-                            exit(false);
-                    'APP-NAME':
-                        ParsedAppName := CopyStr(FieldValue, 1, MaxStrLen(ParsedAppName));
-                    'CUSTOMER':
-                        ParsedCustomerName := CopyStr(FieldValue, 1, MaxStrLen(ParsedCustomerName));
-                    'VALID-FROM':
-                        if not Evaluate(ParsedValidFrom, FieldValue) then
-                            exit(false);
-                    'VALID-TO':
-                        if not Evaluate(ParsedValidTo, FieldValue) then
-                            exit(false);
-                    'FEATURES':
-                        ParsedFeatures := CopyStr(FieldValue, 1, MaxStrLen(ParsedFeatures));
-                end;
+                ParseLicenseContentCase(FieldName, FieldValue);
             end;
         end;
 
@@ -362,7 +345,6 @@ page 80507 "License Import"
     /// </summary>
     local procedure ValidateParsedLicense()
     var
-        LicenseGenerator: Codeunit "License Generator";
         ApplicationRegistry: Record "Application Registry";
     begin
         ValidationSuccess := false;
@@ -370,7 +352,7 @@ page 80507 "License Import"
 
         // Check if application exists
         if not ApplicationRegistry.Get(ParsedAppId) then begin
-            ValidationStatus := StrSubstNo(ApplicationNotFoundWarning, ParsedAppName, ParsedAppId);
+            ValidationStatus := StrSubstNo(ApplicationNotFoundWarningMsg, ParsedAppName, ParsedAppId);
             exit;
         end;
 
@@ -387,11 +369,12 @@ page 80507 "License Import"
     /// <summary>
     /// Creates a temporary license record and validates it.
     /// </summary>
+    /// <returns>True if the license is valid, false otherwise.</returns>
     local procedure ValidateTemporaryLicense(): Boolean
     var
+        ApplicationRegistry: Record "Application Registry";
         TempLicenseRegistry: Record "License Registry" temporary;
         LicenseGenerator: Codeunit "License Generator";
-        ApplicationRegistry: Record "Application Registry";
     begin
         if not ApplicationRegistry.Get(ParsedAppId) then
             exit(false);
@@ -406,7 +389,7 @@ page 80507 "License Import"
         TempLicenseRegistry.Features := ParsedFeatures;
         TempLicenseRegistry."Digital Signature" := ParsedSignature;
         TempLicenseRegistry.Status := TempLicenseRegistry.Status::Active;
-        TempLicenseRegistry.Insert();
+        TempLicenseRegistry.Insert(false);
 
         // Validate the license
         exit(LicenseGenerator.ValidateLicense(ParsedLicenseId));
@@ -418,8 +401,6 @@ page 80507 "License Import"
     local procedure ImportParsedLicense()
     var
         LicenseRegistry: Record "License Registry";
-        ApplicationRegistry: Record "Application Registry";
-        TempBlob: Codeunit System.Utilities."Temp Blob";
         LicenseOutStream: OutStream;
     begin
         // Check if license already exists
@@ -427,10 +408,9 @@ page 80507 "License Import"
             Error(LicenseAlreadyExistsErr, ParsedLicenseId);
 
         // Warn if validation failed but allow import
-        if not ValidationSuccess then begin
+        if not ValidationSuccess then
             if not Confirm(StrSubstNo(ConfirmImportInvalidLicenseQst), false) then
                 exit;
-        end;
 
         // Create license registry entry
         LicenseRegistry.Init();
@@ -473,10 +453,114 @@ page 80507 "License Import"
         CurrPage.Update(false);
     end;
 
+    local procedure ParseLicenseContentCase(FieldName: Text; FieldValue: Text) IsOk: Boolean
+    var
+        ContentDict: Dictionary of [Text, Dictionary of [Boolean, Text]];
+        DicOfEval: Dictionary of [Boolean, Text];
+        FormatTxT: Text;
+    begin
+
+        IsOk := true;
+        PopulateParseLicenseContentCaseSetDict(ContentDict);
+
+        if not ContentDict.Get(FieldName, DicOfEval) then
+            exit(false);
+
+        if not DicOfEval.Get(true, FormatTxT) then
+            FormatTxT := 'Text';
+
+        case FormatTxT of
+            'Guid':
+                IsOk := HandleGUID(FieldName, FieldValue);
+            'Date':
+                IsOk := HandleDate(FieldName, FieldValue);
+            'Text':
+                HandleText(FieldName, FieldValue);
+
+        end;
+        exit(IsOk);
+    end;
+
+    local procedure PopulateParseLicenseContentCaseSetDict(var ContentDict: Dictionary of [Text, Dictionary of [Boolean, Text]])
+    var
+        DicOfEval: Dictionary of [Boolean, Text];
+    begin
+        Clear(DicOfEval);
+        DicOfEval.Add(true, 'Guid');
+        ContentDict.Add('ID', DicOfEval);
+
+        Clear(DicOfEval);
+        DicOfEval.Add(true, 'Guid');
+        ContentDict.Add('APP-ID', DicOfEval);
+
+        Clear(DicOfEval);
+        DicOfEval.Add(false, 'Text');
+        ContentDict.Add('APP-NAME', DicOfEval);
+
+        Clear(DicOfEval);
+        DicOfEval.Add(false, 'Text');
+        ContentDict.Add('CUSTOMER', DicOfEval);
+
+        Clear(DicOfEval);
+        DicOfEval.Add(true, 'Date');
+        ContentDict.Add('VALID-FROM', DicOfEval);
+
+        Clear(DicOfEval);
+        DicOfEval.Add(true, 'Date');
+        ContentDict.Add('VALID-TO', DicOfEval);
+
+        Clear(DicOfEval);
+        DicOfEval.Add(false, 'Text');
+        ContentDict.Add('FEATURES', DicOfEval);
+    end;
+
+    local procedure HandleGUID(FieldName: Text; FieldValue: Text): Boolean
+    var
+        FormatGuid: Guid;
+    begin
+        if not Evaluate(FormatGuid, FieldValue) then
+            exit(false);
+
+        case FieldName of
+            'ID':
+                ParsedLicenseId := FormatGuid;
+            'APP-ID':
+                ParsedAppId := FormatGuid;
+        end;
+    end;
+
+    local procedure HandleDate(FieldName: Text; FieldValue: Text): Boolean
+    var
+        FormatDate: Date;
+    begin
+        if not Evaluate(FormatDate, FieldValue) then
+            exit(false);
+
+        case FieldName of
+            'VALID-FROM':
+                ParsedValidFrom := FormatDate;
+            'VALID-TO':
+                ParsedValidTo := FormatDate;
+        end;
+        exit(true);
+    end;
+
+    local procedure HandleText(FieldName: Text; FieldValue: Text)
+    begin
+        case FieldName of
+            'APP-NAME':
+                ParsedAppName := CopyStr(FieldValue, 1, MaxStrLen(ParsedAppName));
+            'CUSTOMER':
+                ParsedCustomerName := CopyStr(FieldValue, 1, MaxStrLen(ParsedCustomerName));
+            'FEATURES':
+                ParsedFeatures := CopyStr(FieldValue, 1, MaxStrLen(ParsedFeatures));
+        end;
+    end;
+
     var
         // Additional labels
-        ValidLicenseLbl: Label 'Valid License';
-        InvalidLicenseLbl: Label 'Invalid License';
+        ValidLicenseLbl: Label 'Valid License', MaxLength = 100;
+        InvalidLicenseLbl: Label 'Invalid License', MaxLength = 100;
         ImportLicenseDialogLbl: Label 'Import License File';
         ImportLicenseFileFilterLbl: Label 'License Files (*.lic)|*.lic|Text Files (*.txt)|*.txt|All Files (*.*)|*.*';
 }

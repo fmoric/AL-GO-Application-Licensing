@@ -2,6 +2,7 @@ namespace ApplicationLicensing.Pages;
 
 using ApplicationLicensing.Codeunit;
 using ApplicationLicensing.Tables;
+using System.Reflection;
 
 /// <summary>
 /// Page License Generation (ID 80503).
@@ -15,7 +16,9 @@ page 80503 "License Generation"
     InsertAllowed = false;
     DeleteAllowed = false;
     ModifyAllowed = false;
-
+    Permissions = tabledata "Application Registry" = rimd,
+              tabledata "License Registry" = rimd,
+              tabledata "Crypto Key Storage" = r;
     layout
     {
         area(Content)
@@ -25,9 +28,9 @@ page 80503 "License Generation"
                 Caption = 'Application Selection';
                 field(SelectedAppId; SelectedAppId)
                 {
-                    ApplicationArea = All;
+
                     Caption = 'Application';
-                    ToolTip = 'Select the application for which to generate a license.';
+                    ToolTip = 'Specifies the application for which the license is being generated.';
                     TableRelation = "Application Registry"."App ID" where(Active = const(true));
                     Lookup = true;
 
@@ -66,23 +69,23 @@ page 80503 "License Generation"
                 }
                 field(SelectedAppName; SelectedAppName)
                 {
-                    ApplicationArea = All;
+
                     Caption = 'Application Name';
-                    ToolTip = 'Shows the selected application name.';
+                    ToolTip = 'Specifies the name of the selected application.';
                     Editable = false;
                 }
                 field(SelectedPublisher; SelectedPublisher)
                 {
-                    ApplicationArea = All;
+
                     Caption = 'Publisher';
-                    ToolTip = 'Shows the selected application publisher.';
+                    ToolTip = 'Specifies the publisher of the selected application.';
                     Editable = false;
                 }
                 field(SelectedVersion; SelectedVersion)
                 {
-                    ApplicationArea = All;
+
                     Caption = 'Version';
-                    ToolTip = 'Shows the selected application version.';
+                    ToolTip = 'Specifies the version of the selected application.';
                     Editable = false;
                 }
             }
@@ -91,9 +94,9 @@ page 80503 "License Generation"
                 Caption = 'Customer Information';
                 field(CustomerName; CustomerName)
                 {
-                    ApplicationArea = All;
+
                     Caption = 'Customer Name';
-                    ToolTip = 'Enter the customer name for the license.';
+                    ToolTip = 'Specifies the name of the customer for whom the license is being generated.';
                     ShowMandatory = true;
                 }
             }
@@ -102,16 +105,16 @@ page 80503 "License Generation"
                 Caption = 'License Validity';
                 field(ValidFrom; ValidFrom)
                 {
-                    ApplicationArea = All;
+
                     Caption = 'Valid From';
-                    ToolTip = 'Enter the date when the license becomes valid.';
+                    ToolTip = 'Specifies the date when the license becomes valid.';
                     ShowMandatory = true;
                 }
                 field(ValidTo; ValidTo)
                 {
-                    ApplicationArea = All;
+
                     Caption = 'Valid To';
-                    ToolTip = 'Enter the date when the license expires.';
+                    ToolTip = 'Specifies the date when the license expires.';
                     ShowMandatory = true;
                 }
             }
@@ -120,9 +123,9 @@ page 80503 "License Generation"
                 Caption = 'Licensed Features';
                 field(LicensedFeatures; LicensedFeatures)
                 {
-                    ApplicationArea = All;
+
                     Caption = 'Features';
-                    ToolTip = 'Enter comma-separated list of licensed features.';
+                    ToolTip = 'Specifies the licensed features for the application.';
                     MultiLine = true;
                 }
             }
@@ -135,7 +138,7 @@ page 80503 "License Generation"
         {
             action(GenerateLicense)
             {
-                ApplicationArea = All;
+
                 Caption = 'Generate License';
                 Image = Certificate;
                 ToolTip = 'Generate the license with the specified parameters.';
@@ -164,7 +167,7 @@ page 80503 "License Generation"
             }
             action(Cancel)
             {
-                ApplicationArea = All;
+
                 Caption = 'Cancel';
                 Image = Cancel;
                 ToolTip = 'Cancel license generation.';
@@ -190,8 +193,8 @@ page 80503 "License Generation"
 
     trigger OnOpenPage()
     begin
-        ValidFrom := Today;
-        ValidTo := CalcDate('<+1Y>', Today);
+        ValidFrom := Today();
+        ValidTo := CalcDate('<+1Y>', Today());
     end;
 
     /// <summary>
@@ -231,26 +234,18 @@ page 80503 "License Generation"
         if ValidFrom > ValidTo then
             Error(StartDateBeforeEndDateErr);
 
-        if ValidTo < Today then
+        if ValidTo < Today() then
             Error(EndDateCannotBePastErr);
     end;
 
-    /// <summary>
-    /// Gets a newline character for formatting.
-    /// </summary>
-    local procedure NewLine(): Char
-    begin
-        exit(10);
-    end;
-
     var
-        // Labels for translatable text
-        LicenseGeneratedSuccessMsg: Label 'License generated successfully!\\License ID: %1';
-        FailedGenerateLicenseErr: Label 'Failed to generate license.';
-        PleaseSelectApplicationErr: Label 'Please select an application.';
-        PleaseEnterCustomerNameErr: Label 'Please enter a customer name.';
-        PleaseEnterValidStartDateErr: Label 'Please enter a valid start date.';
-        PleaseEnterValidEndDateErr: Label 'Please enter a valid end date.';
-        StartDateBeforeEndDateErr: Label 'Start date must be before end date.';
         EndDateCannotBePastErr: Label 'End date cannot be in the past.';
+        FailedGenerateLicenseErr: Label 'Failed to generate license.';
+        // Labels for translatable text
+        LicenseGeneratedSuccessMsg: Label 'License generated successfully!\\License ID: %1', Comment = '%1 - The generated license ID.';
+        PleaseEnterCustomerNameErr: Label 'Please enter a customer name.';
+        PleaseEnterValidEndDateErr: Label 'Please enter a valid end date.';
+        PleaseEnterValidStartDateErr: Label 'Please enter a valid start date.';
+        PleaseSelectApplicationErr: Label 'Please select an application.';
+        StartDateBeforeEndDateErr: Label 'Start date must be before end date.';
 }

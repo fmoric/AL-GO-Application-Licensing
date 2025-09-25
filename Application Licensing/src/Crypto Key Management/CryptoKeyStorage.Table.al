@@ -2,6 +2,7 @@ namespace ApplicationLicensing.Tables;
 
 using ApplicationLicensing.Enums;
 using System.Security.AccessControl;
+using ApplicationLicensing.Pages;
 
 /// <summary>
 /// Table Crypto Key Storage (ID 80502).
@@ -11,7 +12,8 @@ table 80502 "Crypto Key Storage"
 {
     DataClassification = SystemMetadata;
     Caption = 'Cryptographic Key Storage';
-
+    LookupPageId = "Crypto Key Management";
+    DrillDownPageId = "Crypto Key Management";
     fields
     {
         field(1; "Key ID"; Code[20])
@@ -92,13 +94,11 @@ table 80502 "Crypto Key Storage"
         {
             Caption = 'Public Key';
             ToolTip = 'Specifies the public key in binary format.';
-            DataClassification = SystemMetadata;
         }
         field(13; "Private Key"; Blob)
         {
             Caption = 'Private Key';
             ToolTip = 'Specifies the private key in binary format.';
-
         }
         field(14; Active; Boolean)
         {
@@ -152,10 +152,18 @@ table 80502 "Crypto Key Storage"
         {
         }
     }
-
+    fieldgroups
+    {
+        fieldgroup(DropDown; "Key ID", "Key Type", Active)
+        {
+        }
+        fieldgroup(Brick; "Key ID", "Key Type", Active)
+        {
+        }
+    }
     trigger OnInsert()
     begin
-        "Created Date" := CurrentDateTime;
-        "Created By" := CopyStr(UserId, 1, MaxStrLen("Created By"));
+        "Created Date" := CurrentDateTime();
+        "Created By" := CopyStr(UserId(), 1, MaxStrLen("Created By"));
     end;
 }

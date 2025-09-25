@@ -10,6 +10,10 @@ using System.Reflection;
 /// </summary>
 codeunit 80503 "License Management"
 {
+    Permissions = tabledata "Application Registry" = r,
+                  tabledata "License Registry" = r,
+                  tabledata "Crypto Key Storage" = r;
+
     var
         ApplicationManager: Codeunit "Application Manager";
         CryptoKeyManager: Codeunit "Crypto Key Manager";
@@ -18,9 +22,9 @@ codeunit 80503 "License Management"
     /// <summary>
     /// Initializes the licensing system with default setup.
     /// </summary>
+    /// <returns>True if initialization was successful.</returns>
     procedure InitializeLicensingSystem(): Boolean
     var
-        CryptoKeyStorage: Record "Crypto Key Storage";
         DefaultKeyId: Code[20];
     begin
         // Check if signing key exists
@@ -29,7 +33,7 @@ codeunit 80503 "License Management"
 
         // Generate default signing key
         DefaultKeyId := DefaultKeyIdPrefixLbl + 'KEY';
-        if not CryptoKeyManager.GenerateKeyPair(DefaultKeyId, "Crypto Key Type"::"Signing Key", CalcDate('<+5Y>', Today)) then
+        if not CryptoKeyManager.GenerateKeyPair(DefaultKeyId, "Crypto Key Type"::"Signing Key", CalcDate('<+5Y>', Today())) then
             Error(FailedGenerateDefaultSigningKeyErr);
 
         Message(LicensingSystemInitializedMsg, DefaultKeyId);
@@ -67,7 +71,7 @@ codeunit 80503 "License Management"
     begin
         OutputText := RegisteredApplicationsLbl + NewLine() + NewLine();
 
-        if ApplicationRegistry.FindSet() then begin
+        if ApplicationRegistry.FindSet() then
             repeat
                 OutputText += StrSubstNo(ApplicationDetailsFormatLbl,
                                        ApplicationRegistry."App ID",
@@ -76,10 +80,9 @@ codeunit 80503 "License Management"
                                        ApplicationRegistry.Version,
                                        ApplicationRegistry.Active,
                                        ApplicationRegistry."Created Date");
-            until ApplicationRegistry.Next() = 0;
-        end else begin
+            until ApplicationRegistry.Next() = 0
+        else
             OutputText += NoApplicationsRegisteredLbl;
-        end;
 
         Message(OutputText);
     end;
@@ -123,9 +126,9 @@ codeunit 80503 "License Management"
     /// <param name="LicenseId">License identifier to validate.</param>
     procedure CLI_ValidateLicense(LicenseId: Text)
     var
-        LicenseGuid: Guid;
-        IsValid: Boolean;
         LicenseRegistry: Record "License Registry";
+        IsValid: Boolean;
+        LicenseGuid: Guid;
     begin
         if not Evaluate(LicenseGuid, LicenseId) then
             Error(InvalidGuidLicenseIdErr, LicenseId);
@@ -154,9 +157,10 @@ codeunit 80503 "License Management"
     begin
         OutputText := GeneratedLicensesLbl + NewLine() + NewLine();
 
-        if LicenseRegistry.FindSet() then begin
+        if LicenseRegistry.FindSet() then
             repeat
-                ApplicationRegistry.Get(LicenseRegistry."App ID");
+                if not ApplicationRegistry.Get(LicenseRegistry."App ID") then
+                    Clear(ApplicationRegistry);
                 OutputText += StrSubstNo(LicenseDetailsFormatLbl,
                                        LicenseRegistry."License ID",
                                        ApplicationRegistry."App Name",
@@ -166,10 +170,10 @@ codeunit 80503 "License Management"
                                        LicenseRegistry.Status,
                                        LicenseRegistry.Features,
                                        LicenseRegistry."Created Date");
-            until LicenseRegistry.Next() = 0;
-        end else begin
+            until LicenseRegistry.Next() = 0
+        else
             OutputText += NoLicensesGeneratedLbl;
-        end;
+
 
         Message(OutputText);
     end;
@@ -206,37 +210,27 @@ codeunit 80503 "License Management"
         StatusText: Text;
     begin
         ApplicationRegistry.SetRange(Active, true);
-        ActiveApps := ApplicationRegistry.Count;
+        ActiveApps := ApplicationRegistry.Count();
 
         LicenseRegistry.SetRange(Status, LicenseRegistry.Status::Active);
-        TotalLicenses := LicenseRegistry.Count;
+        TotalLicenses := LicenseRegistry.Count();
 
         CryptoKeyStorage.SetRange(Active, true);
-        ActiveKeys := CryptoKeyStorage.Count;
+        ActiveKeys := CryptoKeyStorage.Count();
 
         StatusText := SystemStatusHeaderLbl + NewLine() + NewLine() +
                      StrSubstNo(ActiveApplicationsLbl, ActiveApps) + NewLine() +
                      StrSubstNo(ActiveLicensesLbl, TotalLicenses) + NewLine() +
                      StrSubstNo(ActiveCryptoKeysLbl, ActiveKeys) + NewLine() +
                      StrSubstNo(SigningKeyAvailableLbl, CryptoKeyManager.IsSigningKeyAvailable()) + NewLine() +
-                     StrSubstNo(SystemTimeLbl, CurrentDateTime);
+                     StrSubstNo(SystemTimeLbl, CurrentDateTime());
 
         Message(StatusText);
     end;
-
-    /// <summary>
-    /// Event handler for license deletion to clean up related data.
-    /// </summary>
-    /// <param name="LicenseId">The deleted license identifier.</param>
-    [IntegrationEvent(false, false)]
-    procedure OnLicenseDeleted(LicenseId: Guid)
-    begin
-        // Event for extensions to handle license deletion
-    end;
-
     /// <summary>
     /// Gets a newline character for formatting.
     /// </summary>
+    /// <returns>Newline character.</returns>
     local procedure NewLine(): Text
     var
         TypeHelper: Codeunit "Type Helper";
@@ -254,12 +248,9 @@ codeunit 80503 "License Management"
         LicenseRegistry: Record "License Registry";
         TempBlob: Codeunit System.Utilities."Temp Blob";
         InStream: InStream;
-        ToFolder: Text;
-        DialogTitle: Text;
-        ResultFilePath: Text;
     begin
         if not LicenseRegistry.Get(LicenseId) then
-            Error('License not found: %1', LicenseId);
+            Error(CreateErrorInfo(ErrorType::Client, Verbosity::Normal, StrSubstNo(LicenseNotFoundErr, LicenseId), false));
 
         TempBlob.FromRecord(LicenseRegistry, LicenseRegistry.FieldNo("License File"));
         TempBlob.CreateInStream(InStream);
@@ -269,42 +260,47 @@ codeunit 80503 "License Management"
         Message(LicenseFileReadyForExportMsg, FileName);
     end;
 
+    internal procedure CreateErrorInfo(ErrType: ErrorType; ErrVerbosity: Verbosity; ErrorMessage: Text; Collectable: Boolean) ErrInfo: ErrorInfo
+    begin
+        ErrInfo.ErrorType(ErrType);
+        ErrInfo.Verbosity(ErrVerbosity);
+        ErrInfo.Message(ErrorMessage);
+        ErrInfo.Collectible := Collectable;
+    end;
+
     var
         // Labels for translatable text
         FailedGenerateDefaultSigningKeyErr: Label 'Failed to generate default signing key.';
-        LicensingSystemInitializedMsg: Label 'Licensing system initialized successfully with signing key: %1';
-        InvalidGuidAppIdErr: Label 'Invalid GUID format for App ID: %1';
-        ApplicationRegisteredSuccessMsg: Label 'Application registered successfully: %1';
-        FailedRegisterApplicationErr: Label 'Failed to register application: %1';
+        LicensingSystemInitializedMsg: Label 'Licensing system initialized successfully with signing key: %1', Comment = '%1 = Key ID';
+        InvalidGuidAppIdErr: Label 'Invalid GUID format for App ID: %1', Comment = '%1 = App ID';
+        ApplicationRegisteredSuccessMsg: Label 'Application registered successfully: %1', Comment = '%1 = App ID';
+        FailedRegisterApplicationErr: Label 'Failed to register application: %1', Comment = '%1 = App ID';
         RegisteredApplicationsLbl: Label 'Registered Applications:';
         NoApplicationsRegisteredLbl: Label 'No applications registered.';
         GeneratedLicensesLbl: Label 'Generated Licenses:';
         NoLicensesGeneratedLbl: Label 'No licenses generated.';
-        InvalidGuidLicenseIdErr: Label 'Invalid GUID format for License ID: %1';
-        InvalidDateFormatValidFromErr: Label 'Invalid date format for Valid From: %1 (expected YYYY-MM-DD)';
-        InvalidDateFormatValidToErr: Label 'Invalid date format for Valid To: %1 (expected YYYY-MM-DD)';
-        LicenseGeneratedSuccessMsg: Label 'License generated successfully.\\License ID: %1';
+        InvalidGuidLicenseIdErr: Label 'Invalid GUID format for License ID: %1', Comment = '%1 = License ID';
+        InvalidDateFormatValidFromErr: Label 'Invalid date format for Valid From: %1 (expected YYYY-MM-DD)', Comment = '%1 = Valid From date';
+        InvalidDateFormatValidToErr: Label 'Invalid date format for Valid To: %1 (expected YYYY-MM-DD)', Comment = '%1 = Valid To date';
         FailedGenerateLicenseErr: Label 'Failed to generate license.';
-        LicenseNotFoundErr: Label 'License not found: %1';
-        InvalidDateFormatExpirationErr: Label 'Invalid date format for expiration: %1 (expected YYYY-MM-DD)';
-        SigningKeyGeneratedSuccessMsg: Label 'Signing key generated successfully: %1';
-        FailedGenerateSigningKeyErr: Label 'Failed to generate signing key: %1';
-        LicenseFileReadyForExportMsg: Label 'License file content ready for export to: %1';
-        LicenseIDMsg: Label 'License ID: %1';
-        LicenseValidationResultMsg: Label 'License Validation Result:';
+        LicenseNotFoundErr: Label 'License not found: %1', Comment = '%1 = License ID';
+        InvalidDateFormatExpirationErr: Label 'Invalid date format for expiration: %1 (expected YYYY-MM-DD)', Comment = '%1 = Expiration date';
+        SigningKeyGeneratedSuccessMsg: Label 'Signing key generated successfully: %1', Comment = '%1 = Key ID';
+        FailedGenerateSigningKeyErr: Label 'Failed to generate signing key: %1', Comment = '%1 = Key ID';
+        LicenseFileReadyForExportMsg: Label 'License file content ready for export to: %1', Comment = '%1 = File Name';
+        LicenseIDMsg: Label 'License ID: %1', Comment = '%1 = License ID';
         SystemStatusHeaderLbl: Label 'Licensing System Status:';
-        ActiveApplicationsLbl: Label 'Active Applications: %1';
-        ActiveLicensesLbl: Label 'Active Licenses: %1';
-        ActiveCryptoKeysLbl: Label 'Active Crypto Keys: %1';
-        SigningKeyAvailableLbl: Label 'Signing Key Available: %1';
-        SystemTimeLbl: Label 'System Time: %1';
+        ActiveApplicationsLbl: Label 'Active Applications: %1', Comment = '%1 = Number of active applications';
+        ActiveLicensesLbl: Label 'Active Licenses: %1', Comment = '%1 = Number of active licenses';
+        ActiveCryptoKeysLbl: Label 'Active Crypto Keys: %1', Comment = '%1 = Number of active crypto keys';
+        SigningKeyAvailableLbl: Label 'Signing Key Available: %1', Comment = '%1 = Signing key availability';
+        SystemTimeLbl: Label 'System Time: %1', Comment = '%1 = System time';
 
         // Format labels for complex output (with locked parts)
-        ApplicationDetailsFormatLbl: Label 'ID: %1\\Name: %2\\Publisher: %3\\Version: %4\\Active: %5\\Created: %6\\';
-        LicenseDetailsFormatLbl: Label 'License ID: %1\\Application: %2\\Customer: %3\\Valid From: %4\\Valid To: %5\\Status: %6\\Features: %7\\Created: %8\\';
-        LicenseValidationResultDetailsLbl: Label 'License Validation Result:\\License ID: %1\\Status: %2\\Valid: %3\\Last Validation: %4\\Validation Result: %5';
+        ApplicationDetailsFormatLbl: Label 'ID: %1\\Name: %2\\Publisher: %3\\Version: %4\\Active: %5\\Created: %6\\', Comment = '%1 = App ID, %2 = App Name, %3 = Publisher, %4 = Version, %5 = Active Status, %6 = Created Date';
+        LicenseDetailsFormatLbl: Label 'License ID: %1\\Application: %2\\Customer: %3\\Valid From: %4\\Valid To: %5\\Status: %6\\Features: %7\\Created: %8\\', Comment = '%1 = License ID, %2 = App ID, %3 = Customer, %4 = Valid From, %5 = Valid To, %6 = Status, %7 = Features, %8 = Created Date';
+        LicenseValidationResultDetailsLbl: Label 'License Validation Result:\\License ID: %1\\Status: %2\\Valid: %3\\Last Validation: %4\\Validation Result: %5', Comment = '%1 = License ID, %2 = Status, %3 = Valid, %4 = Last Validation, %5 = Validation Result';
 
         // Locked labels for technical strings
         DefaultKeyIdPrefixLbl: Label 'DEFAULT-SIGN-', Locked = true;
-        DateTimeFormatLbl: Label '<Year4><Month,2><Day,2><Hours24><Minutes,2><Seconds,2>', Locked = true;
 }

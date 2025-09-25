@@ -1,6 +1,7 @@
 namespace ApplicationLicensing.Codeunit;
 
 using ApplicationLicensing.Tables;
+using System.Utilities;
 
 /// <summary>
 /// Codeunit Application Manager (ID 80500).
@@ -8,6 +9,8 @@ using ApplicationLicensing.Tables;
 /// </summary>
 codeunit 80500 "Application Manager"
 {
+    Permissions = tabledata "Application Registry" = rimd,
+                  tabledata "License Registry" = rd;
 
     /// <summary>
     /// Registers a new application in the system.
@@ -118,15 +121,15 @@ codeunit 80500 "Application Manager"
     var
         ApplicationRegistry: Record "Application Registry";
         LicenseRegistry: Record "License Registry";
+        ConfirmManagement: Codeunit "Confirm Management";
     begin
         if not ApplicationRegistry.Get(AppId) then
             Error(ApplicationNotFoundErr, AppId);
-
         // Check for existing licenses
         LicenseRegistry.SetRange("App ID", AppId);
-        if not LicenseRegistry.IsEmpty then
-            if not Confirm(
-                StrSubstNo(ConfirmDeleteApplicationWithLicensesQst, ApplicationRegistry."App Name"), false) then
+        if not LicenseRegistry.IsEmpty() then
+            if not ConfirmManagement.GetResponseOrDefault(
+                StrSubstNo(this.ConfirmDeleteApplicationWithLicensesQst, ApplicationRegistry."App Name"), false) then
                 exit(false);
 
         // Delete all associated licenses
@@ -138,7 +141,8 @@ codeunit 80500 "Application Manager"
 
     var
         // Labels for translatable text (error messages and confirmations)
-        ApplicationAlreadyExistsErr: Label 'Application with ID %1 already exists.';
-        ApplicationNotFoundErr: Label 'Application with ID %1 does not exist.';
-        ConfirmDeleteApplicationWithLicensesQst: Label 'Application %1 has associated licenses. Delete all licenses and the application?';
+        ApplicationAlreadyExistsErr: Label 'Application with ID %1 already exists.', Comment = '%1 = App ID (Guid)';
+
+        ApplicationNotFoundErr: Label 'Application with ID %1 does not exist.', Comment = '%1 = App ID (Guid)';
+        ConfirmDeleteApplicationWithLicensesQst: Label 'Application %1 has associated licenses. Delete all licenses and the application?', Comment = '%1 = Application Name';
 }

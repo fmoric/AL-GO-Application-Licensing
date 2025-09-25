@@ -22,38 +22,28 @@ page 80501 "Application Card"
                 Caption = 'General Information';
                 field("App ID"; Rec."App ID")
                 {
-                    ApplicationArea = All;
-                    ToolTip = 'Specifies the unique application identifier.';
                     Editable = IsNewRecord;
                 }
                 field("App Name"; Rec."App Name")
                 {
-                    ApplicationArea = All;
-                    ToolTip = 'Specifies the application name.';
                     ShowMandatory = true;
                 }
                 field(Publisher; Rec.Publisher)
                 {
-                    ApplicationArea = All;
-                    ToolTip = 'Specifies the publisher name.';
                     ShowMandatory = true;
                 }
                 field(Version; Rec.Version)
                 {
-                    ApplicationArea = All;
-                    ToolTip = 'Specifies the application version.';
                     ShowMandatory = true;
                 }
                 field(Description; Rec.Description)
                 {
-                    ApplicationArea = All;
-                    ToolTip = 'Specifies an optional description for the application.';
+
                     MultiLine = true;
                 }
                 field(Active; Rec.Active)
                 {
-                    ApplicationArea = All;
-                    ToolTip = 'Specifies whether the application is active and can have licenses generated.';
+
                 }
             }
             group(Metadata)
@@ -62,23 +52,19 @@ page 80501 "Application Card"
                 Editable = false;
                 field("Created Date"; Rec."Created Date")
                 {
-                    ApplicationArea = All;
-                    ToolTip = 'Specifies when the application was registered.';
+
                 }
                 field("Created By"; Rec."Created By")
                 {
-                    ApplicationArea = All;
-                    ToolTip = 'Specifies who registered the application.';
+
                 }
                 field("Last Modified Date"; Rec."Last Modified Date")
                 {
-                    ApplicationArea = All;
-                    ToolTip = 'Specifies when the application was last modified.';
+
                 }
                 field("Last Modified By"; Rec."Last Modified By")
                 {
-                    ApplicationArea = All;
-                    ToolTip = 'Specifies who last modified the application.';
+
                 }
             }
         }
@@ -86,7 +72,7 @@ page 80501 "Application Card"
         {
             part(LicenseInfo; "Application License FactBox")
             {
-                ApplicationArea = All;
+
                 SubPageLink = "App ID" = field("App ID");
                 Visible = not IsNewRecord;
             }
@@ -99,7 +85,7 @@ page 80501 "Application Card"
         {
             action(GenerateLicense)
             {
-                ApplicationArea = All;
+
                 Caption = 'Generate License';
                 Image = Certificate;
                 ToolTip = 'Generate a new license for this application.';
@@ -117,7 +103,7 @@ page 80501 "Application Card"
             }
             action(ViewLicenses)
             {
-                ApplicationArea = All;
+
                 Caption = 'View Licenses';
                 Image = ViewDetails;
                 ToolTip = 'View all licenses for this application.';
@@ -140,7 +126,7 @@ page 80501 "Application Card"
         {
             action(GenerateGuid)
             {
-                ApplicationArea = All;
+
                 Caption = 'Generate New GUID';
                 Image = New;
                 ToolTip = 'Generate a new unique identifier for the application.';

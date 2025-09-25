@@ -33,26 +33,22 @@ using System.Text;
 /// </summary>
 codeunit 80501 "Crypto Key Manager"
 {
+    Permissions = tabledata "Crypto Key Storage" = rim;
     /// <summary>
     /// Uploads and validates a .p12 certificate file.
     /// </summary>
+    /// <param name="CryptoKeyStorage">Record variable for Crypto Key Storage to upload and validate the certificate into.</param>
     internal procedure UploadAndValidateCertificate(var CryptoKeyStorage: Record "Crypto Key Storage")
     var
-        KeyId: Text;
-        KeyType: Enum "Crypto Key Type";
-        ExpiresDate: Date;
-        CertificateUploaded: Boolean;
-        CertificateInfoVisible: Boolean;
         CertificateInfoText: Text;
-        CertificateUploadedSuccessfullyMsg: Label 'Certificate uploaded and validated successfully.';
-        CertificateUploadFailedErr: Label 'Failed to upload or validate certificate. Please check the file and password.';
+        CertificateDetailsLbl: Label 'Certificate Details:\Key ID: %1\Key Type: %2\Expires: %3\Thumbprint: %4\Issued To: %5\Issued By: %6', Comment = '%1=Key ID, %2=Key Type, %3=Expiry Date, %4=Thumbprint, %5=Issued To, %6=Issued By';
     begin
         // Use the to upload and save the certificate
         if not UploadAndSaveCertificate(CryptoKeyStorage) then
             Error(CertificateUploadFailedErr);
 
         // Build certificate info text
-        CertificateInfoText := StrSubstNo('Certificate Details:\Key ID: %1\Key Type: %2\Expires: %3\Thumbprint: %4\Issued To: %5\Issued By: %6',
+        CertificateInfoText := StrSubstNo(CertificateDetailsLbl,
             CryptoKeyStorage."Key ID",
             Format(CryptoKeyStorage."Key Type"),
             Format(CryptoKeyStorage."Expires Date"),
@@ -69,7 +65,6 @@ codeunit 80501 "Crypto Key Manager"
         Base64Convert: Codeunit "Base64 Convert";
         TempBlob: Codeunit "Temp Blob";
         InStr: InStream;
-        CertUploadErr: Label 'Certificate upload was cancelled or failed.';
         CertificatePass: SecretText;
         Base64Cert: Text;
         KeyIdFormatLbl: Label 'CERT-%1', Locked = true;
@@ -77,12 +72,12 @@ codeunit 80501 "Crypto Key Manager"
     begin
         // Generate Key ID if not provided
         if CryptoStorageTable."Key ID" = '' then
-            CryptoStorageTable."Key ID" := CopyStr(StrSubstNo(KeyIdFormatLbl, Format(CurrentDateTime, 0, KeyIdDateFormatLbl)), 1, 20);
+            CryptoStorageTable."Key ID" := CopyStr(StrSubstNo(KeyIdFormatLbl, Format(CurrentDateTime(), 0, KeyIdDateFormatLbl)), 1, 20);
 
         // Set default values if not specified
         CryptoStorageTable."Key Type" := CryptoStorageTable."Key Type"::Certificate;
         if CryptoStorageTable."Expires Date" = 0D then
-            CryptoStorageTable."Expires Date" := CalcDate('<+5Y>', Today);
+            CryptoStorageTable."Expires Date" := CalcDate('<+5Y>', Today());
         CryptoStorageTable.Active := true;
         CryptoStorageTable.Algorithm := 'Certificate';
         CryptoStorageTable."Imported Certificate" := true;
@@ -134,7 +129,10 @@ codeunit 80501 "Crypto Key Manager"
         if IsNullGuid(IsolatedGUID) then
             IsolatedGUID := CreateGuid();
         //Set isolated storage 
+#pragma warning disable LC0043 //No SecretText needed
         exit(IsolatedStorage.Set(CopyStr(IsolatedGUID, 1, 200), Value, Datascope));
+#pragma warning restore LC0043
+
     end;
 
     internal procedure IsolatedStorageSet(var IsolatedGUID: Guid; Value: SecretText; Datascope: DataScope): Boolean
@@ -263,20 +261,10 @@ codeunit 80501 "Crypto Key Manager"
     /// - Certificate fingerprinting for identification
     /// </summary>
     /// <param name="CertificateData">Base64-encoded .p12 certificate data from file upload.</param>
-    /// <param name="Password">Certificate password as SecretText (empty if not protected).</param>
     /// <param name="PublicKey">Output parameter for the extracted public key in PEM-compatible format.</param>
     /// <param name="PrivateKey">Output parameter for the extracted private key as Text for storage.</param>
     /// <returns>True if certificate processing and key extraction was successful, False otherwise.</returns>
-    local procedure ImportKeysFromP12Certificate(CertificateData: Text; Password: SecretText; var PublicKey: Text; var PrivateKey: Text): Boolean
-    var
-        CertificateMgmt: Codeunit "Certificate Management";
-        X509Certificate2: Codeunit "X509Certificate2";
-        TempBlob: Codeunit "Temp Blob";
-        OutStream: OutStream;
-        InStream: InStream;
-        CertBytes: List of [Byte];
-        KeyIdentifier: Text;
-        Timestamp: DateTime;
+    local procedure ImportKeysFromP12Certificate(CertificateData: Text; var PublicKey: Text; var PrivateKey: Text): Boolean
     begin
         // Initialize output parameters to ensure clean state
         PublicKey := '';
@@ -288,7 +276,7 @@ codeunit 80501 "Crypto Key Manager"
 
         // Primary processing: Attempt to use Business Central's built-in certificate management
         // This method leverages the platform's native cryptographic capabilities when available
-        if TryImportCertificateWithSystemMethods(CertificateData, Password, PublicKey, PrivateKey) then
+        if TryImportCertificateWithSystemMethods(CertificateData, PublicKey, PrivateKey) then
             exit(true);
 
         // Fallback processing: Create certificate-compatible key structures
@@ -312,20 +300,17 @@ codeunit 80501 "Crypto Key Manager"
     /// is not available, which is why it's implemented as a TryFunction.
     /// </summary>
     /// <param name="CertificateData">Base64-encoded certificate data from .p12 file.</param>
-    /// <param name="Password">Certificate password for protected certificates.</param>
     /// <param name="PublicKey">Output public key in PEM-compatible format.</param>
     /// <param name="PrivateKey">Output private key prepared for secure storage.</param>
-    /// <returns>True if system certificate processing succeeded, False if fallback needed.</returns>
     [TryFunction]
-    local procedure TryImportCertificateWithSystemMethods(CertificateData: Text; Password: SecretText; var PublicKey: Text; var PrivateKey: Text)
+    local procedure TryImportCertificateWithSystemMethods(CertificateData: Text; var PublicKey: Text; var PrivateKey: Text)
     var
-        CryptographyMgmt: Codeunit "Cryptography Management";
         KeyIdentifier: Text;
         Timestamp: DateTime;
         CertificateInfo: Text;
     begin
         // Generate unique identifiers and timestamps for this certificate import session
-        Timestamp := CurrentDateTime;
+        Timestamp := CurrentDateTime();
         KeyIdentifier := Format(CreateGuid()).Replace('{', '').Replace('}', '').Replace('-', '');
 
         // Prepare certificate metadata for embedding in key structures
@@ -371,7 +356,7 @@ codeunit 80501 "Crypto Key Manager"
         CertificateFingerprint: Text;
     begin
         // Generate session identifiers for this key creation operation
-        Timestamp := CurrentDateTime;
+        Timestamp := CurrentDateTime();
         KeyIdentifier := Format(CreateGuid()).Replace('{', '').Replace('}', '').Replace('-', '');
 
         // Create a unique fingerprint from the certificate data for identification
@@ -464,15 +449,15 @@ codeunit 80501 "Crypto Key Manager"
 
         // Apply security layer based on system capabilities
         // Priority: Use system encryption when available for maximum security
-        if CryptographyMgmt.IsEncryptionEnabled() then begin
+        if CryptographyMgmt.IsEncryptionEnabled() then
             // System encryption available: Create secure hash with application salt
             // This provides strong protection against unauthorized access
-            EncryptedPrivateKey := StrSubstNo(EncryptedKeyFormatLbl, CryptographyMgmt.GenerateHash(PrivateKeyText + SecureKeyHashKeyLbl, 1));
-        end else begin
+            EncryptedPrivateKey := StrSubstNo(EncryptedKeyFormatLbl, CryptographyMgmt.GenerateHash(PrivateKeyText + SecureKeyHashKeyLbl, 1))
+        else
             // Fallback security: Use secure encoding format
             // While not encrypted, this prevents accidental plain-text exposure
             EncryptedPrivateKey := StrSubstNo(SecureKeyFormatLbl, PrivateKeyText);
-        end;
+
 
         // Write the secured private key to the database blob field
         // Blob storage provides additional protection against casual access
@@ -546,28 +531,6 @@ codeunit 80501 "Crypto Key Manager"
     end;
 
     /// <summary>
-    /// Gets the certificate password from the user via input dialog.
-    /// </summary>
-    /// <param name="Password">Output parameter for the certificate password.</param>
-    /// <returns>True if password was provided.</returns>
-    local procedure GetCertificatePassword(var Password: SecretText): Boolean
-    var
-        PasswordChoice: Integer;
-    begin
-        // Use a simple menu for password selection
-        PasswordChoice := StrMenu('No password (certificate is not protected),Enter password for protected certificate', 1, 'Certificate Password');
-        if PasswordChoice = 0 then
-            exit(false);
-
-        if PasswordChoice = 1 then
-            Clear(Password)
-        else
-            Clear(Password); // Simplified - would need custom dialog for actual password input
-
-        exit(true);
-    end;
-
-    /// <summary>
     /// Validates a .p12 certificate file without importing it into the key storage system.
     /// 
     /// This method provides a non-destructive way to verify certificate validity before
@@ -592,16 +555,15 @@ codeunit 80501 "Crypto Key Manager"
     /// - Consider combining with import for production workflows
     /// </summary>
     /// <param name="CertificateData">Base64-encoded .p12 certificate data to validate.</param>
-    /// <param name="Password">Certificate password as SecretText (empty if not protected).</param>
     /// <returns>True if certificate is valid and can be successfully imported, False otherwise.</returns>
-    procedure ValidateCertificate(CertificateData: Text; Password: SecretText): Boolean
+    procedure ValidateCertificate(CertificateData: Text): Boolean
     var
         PublicKey: Text;
         PrivateKey: Text;
     begin
         // Perform the same key extraction process as import, but discard results
         // This validates certificate format, password, and system compatibility
-        exit(ImportKeysFromP12Certificate(CertificateData, Password, PublicKey, PrivateKey));
+        exit(ImportKeysFromP12Certificate(CertificateData, PublicKey, PrivateKey));
     end;
 
     /// <summary>
@@ -633,19 +595,20 @@ codeunit 80501 "Crypto Key Manager"
     /// <returns>True if certificate information was successfully extracted and formatted.</returns>
     procedure GetCertificateInfo(CertificateData: Text; Password: SecretText; var CertificateInfo: Text): Boolean
     var
+        CertImportSuccessQst: Label 'Certificate imported successfully.\nFingerprint: %1\nPublic Key Length: %2 characters\nPrivate Key Available: %3', Comment = '%1=Certificate Fingerprint, %2=Public Key Length, %3=True/False if Private Key is available';
         PublicKey: Text;
         PrivateKey: Text;
         CertificateFingerprint: Text;
     begin
         // Attempt to process the certificate and extract key information
-        if not ImportKeysFromP12Certificate(CertificateData, Password, PublicKey, PrivateKey) then
+        if not ImportKeysFromP12Certificate(CertificateData, PublicKey, PrivateKey) then
             exit(false);
 
         // Generate unique fingerprint for certificate identification
         CertificateFingerprint := CreateCertificateFingerprint(CertificateData);
 
         // Format comprehensive information string with key metrics
-        CertificateInfo := StrSubstNo('Certificate imported successfully.\nFingerprint: %1\nPublic Key Length: %2 characters\nPrivate Key Available: %3',
+        CertificateInfo := StrSubstNo(CertImportSuccessQst,
                                      CertificateFingerprint,
                                      StrLen(PublicKey),
                                      PrivateKey <> '');
@@ -678,7 +641,7 @@ codeunit 80501 "Crypto Key Manager"
 
         // Extract cryptographic keys from the certificate using secure processing
         // This handles both password-protected and unprotected certificates
-        if not ImportKeysFromP12Certificate(CertificateData, Password, PublicKey, PrivateKey) then
+        if not ImportKeysFromP12Certificate(CertificateData, PublicKey, PrivateKey) then
             Error(FailedImportCertificateErr);
 
         // Initialize the key storage record with certificate-specific metadata
@@ -817,7 +780,7 @@ codeunit 80501 "Crypto Key Manager"
         // Filter 2: Only active keys (excludes deactivated keys)
         CryptoKeyStorage.SetRange(Active, true);
         // Filter 3: Only unexpired keys (future date or no expiration date)
-        CryptoKeyStorage.SetFilter("Expires Date", '>%1|%2', Today, 0D);
+        CryptoKeyStorage.SetFilter("Expires Date", '>%1|%2', Today(), 0D);
 
         // Attempt to find the first key matching our criteria
         if not CryptoKeyStorage.FindFirst() then
@@ -842,7 +805,7 @@ codeunit 80501 "Crypto Key Manager"
         // Update usage statistics for audit and key rotation planning
         // This helps administrators track key utilization patterns
         CryptoKeyStorage."Usage Count" += 1;
-        CryptoKeyStorage.Modify();
+        CryptoKeyStorage.Modify(true);
 
         // Success: Key retrieved and usage logged
         exit(true);
@@ -938,7 +901,7 @@ codeunit 80501 "Crypto Key Manager"
         CryptoKeyStorage.Active := false;
 
         // Commit the deactivation to the database
-        exit(CryptoKeyStorage.Modify());
+        exit(CryptoKeyStorage.Modify(true));
     end;
 
     /// <summary>
@@ -977,11 +940,11 @@ codeunit 80501 "Crypto Key Manager"
         // Filter for active keys only (excludes deactivated keys)
         CryptoKeyStorage.SetRange(Active, true);
         // Filter for unexpired keys (future expiration date or no expiration)
-        CryptoKeyStorage.SetFilter("Expires Date", '>%1|%2', Today, 0D);
+        CryptoKeyStorage.SetFilter("Expires Date", '>%1|%2', Today(), 0D);
 
         // Return true if at least one record matches our criteria
         // IsEmpty() is more efficient than FindFirst() for existence checks
-        exit(not CryptoKeyStorage.IsEmpty);
+        exit(not (CryptoKeyStorage.IsEmpty()));
     end;
 
     /// <summary>
@@ -1021,13 +984,9 @@ codeunit 80501 "Crypto Key Manager"
         TempBlobPrivate: Codeunit System.Utilities."Temp Blob";
         PublicKeyOutStream: OutStream;
         PrivateKeyOutStream: OutStream;
-        PublicKeyInStream: InStream;
-        PrivateKeyInStream: InStream;
-        RSAKeySize: Integer;
         KeyGenerationSuccess: Boolean;
     begin
         // Initialize key generation parameters
-        RSAKeySize := 2048; // Industry standard for secure applications
         KeyGenerationSuccess := false;
 
         // Initialize output parameters to ensure clean state
@@ -1088,20 +1047,15 @@ codeunit 80501 "Crypto Key Manager"
     local procedure TryGenerateSystemKeys(var PublicKeyPem: Text; var PrivateKeyPem: Text)
     var
         RSACryptoServiceProvider: Codeunit System.Security.Encryption."RSACryptoServiceProvider";
-        PublicKeyOutStream: OutStream;
-        PrivateKeyOutStream: OutStream;
         PublicKeyXml: Text;
         PrivateKeyXmlText: Text;
         KeySize: Integer;
         KeyIdentifier: Text;
         Timestamp: DateTime;
-        TempBlob: Codeunit System.Utilities."Temp Blob";
-        SecretOutStream: OutStream;
-        SecretInStream: InStream;
     begin
         // Configure RSA key generation parameters
         KeySize := 2048; // Industry standard key size for secure applications
-        Timestamp := CurrentDateTime;
+        Timestamp := CurrentDateTime();
         KeyIdentifier := Format(CreateGuid()).Replace('{', '').Replace('}', '').Replace('-', '');
 
         // Initialize Business Central's RSA cryptographic service provider
@@ -1168,7 +1122,7 @@ codeunit 80501 "Crypto Key Manager"
         Prime2: Text;
         Timestamp: DateTime;
     begin
-        Timestamp := CurrentDateTime;
+        Timestamp := CurrentDateTime();
         RandomGuid := CreateGuid();
         KeyIdentifier := Format(RandomGuid).Replace('{', '').Replace('}', '').Replace('-', '');
 
@@ -1243,11 +1197,7 @@ codeunit 80501 "Crypto Key Manager"
         if (StrLen(PublicKey) = 0) or (StrLen(PrivateKey) = 0) then
             exit(false);
 
-        // Check for proper PEM header/footer structure
-        if not (PublicKey.Contains('BEGIN') and PublicKey.Contains('END')) then
-            exit(false);
-
-        if not (PrivateKey.Contains('BEGIN') and PrivateKey.Contains('END')) then
+        if not CheckPEMHdrFootStruct(PublicKey, PrivateKey) then
             exit(false);
 
         // Verify that the keys form a valid pair
@@ -1318,9 +1268,18 @@ codeunit 80501 "Crypto Key Manager"
         exit(true);
     end;
 
+    local procedure CheckPEMHdrFootStruct(PublicKey: Text; PrivateKey: Text): Boolean
+    begin
+        // Check for proper PEM header/footer structure
+        if not (PublicKey.Contains('BEGIN') and PublicKey.Contains('END')) then
+            exit(false);
+
+        if not (PrivateKey.Contains('BEGIN') and PrivateKey.Contains('END')) then
+            exit(false);
+    end;
+
     var
         CertificateAlgorithmLbl: Label 'CERTIFICATE-RSA', Locked = true;
-        CertificateImportFailedErr: Label 'Failed to import certificate. Please try again.';
 
         // Certificate import format templates for .p12 certificate processing
         // These define the structure for certificate-based keys with embedded certificate metadata
@@ -1338,12 +1297,9 @@ codeunit 80501 "Crypto Key Manager"
         HexCharactersLbl: Label '0123456789ABCDEF', Locked = true;
         ImportedCertificatePrivateKeyLbl: Label '-----BEGIN IMPORTED PRIVATE KEY-----\nKey-ID: %1\nAlgorithm: CERTIFICATE-RSA\nImported: %2\nFingerprint: %3\nSecure: IMPORTED-CERTIFICATE-PRIVATE-KEY\n-----END IMPORTED PRIVATE KEY-----', Locked = true;
         ImportedCertificatePublicKeyLbl: Label '-----BEGIN IMPORTED PUBLIC KEY-----\nKey-ID: %1\nAlgorithm: CERTIFICATE-RSA\nImported: %2\nFingerprint: %3\n-----END IMPORTED PUBLIC KEY-----', Locked = true;
-        InvalidCertificateDataErr: Label 'Invalid certificate data. Please provide a valid .p12 certificate file.';
-        InvalidCertificatePasswordErr: Label 'Invalid certificate password. Please check the password and try again.';
         // Error message labels for user-facing error conditions
         // These provide clear, actionable error messages for common failure scenarios
-        KeyAlreadyExistsErr: Label 'Key with ID %1 already exists.';
-        KeyIdMustBeSpecifiedErr: Label 'Key ID must be specified before importing the certificate.';
+        KeyAlreadyExistsErr: Label 'Key with ID %1 already exists.', Comment = '%1 = Key ID';
         KeyIdPrefixLbl: Label 'Key-ID: ', Locked = true;
 
         // Technical string labels for algorithm identification and system integration
@@ -1360,13 +1316,9 @@ codeunit 80501 "Crypto Key Manager"
         SecureKeyFormatLbl: Label 'SECURE-ENCODED-KEY:%1', Locked = true;
         SecureKeyHashKeyLbl: Label 'AL-LICENSING-SECURE-KEY-HASH-2024', Locked = true;
         StandardRSAPublicExponentLbl: Label '65537', Locked = true;
-        SystemGeneratedPrivateKeyPlaceholderLbl: Label 'SYSTEM-GENERATED-PRIVATE-KEY-PLACEHOLDER', Locked = true;
-        SystemGeneratedPublicKeyPlaceholderLbl: Label 'SYSTEM-GENERATED-PUBLIC-KEY-PLACEHOLDER', Locked = true;
-        SystemRSAPrivateKeyFormatLbl: Label '-----BEGIN RSA PRIVATE KEY-----\nKey-ID: %1\nAlgorithm: RSA-2048\nGenerated: %2\nXmlData: %3\n-----END RSA PRIVATE KEY-----', Locked = true;
         SystemRSAPrivateKeySecureLbl: Label '-----BEGIN RSA PRIVATE KEY-----\nKey-ID: %1\nAlgorithm: RSA-2048\nGenerated: %2\nSecure: SYSTEM-MANAGED-PRIVATE-KEY\n-----END RSA PRIVATE KEY-----', Locked = true;
 
         // System-generated key format templates for Business Central native cryptography
         // These maintain compatibility with BC's built-in cryptographic services
         SystemRSAPublicKeyFormatLbl: Label '-----BEGIN RSA PUBLIC KEY-----\nKey-ID: %1\nAlgorithm: RSA-2048\nGenerated: %2\nXmlData: %3\n-----END RSA PUBLIC KEY-----', Locked = true;
-        TestDataForKeyValidationLbl: Label 'Test data for key validation', Locked = true;
 }

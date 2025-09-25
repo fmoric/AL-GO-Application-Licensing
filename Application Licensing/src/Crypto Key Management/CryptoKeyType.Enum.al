@@ -8,19 +8,23 @@ enum 80501 "Crypto Key Type"
     Extensible = true;
     Caption = 'Cryptographic Key Type';
 
-    value(0; "Signing Key")
+    value(0; "")
+    {
+        Caption = '', Locked = true;
+    }
+    value(1; "Signing Key")
     {
         Caption = 'Signing Key';
     }
-    value(1; "Validation Key")
+    value(2; "Validation Key")
     {
         Caption = 'Validation Key';
     }
-    value(2; "Master Key")
+    value(3; "Master Key")
     {
         Caption = 'Master Key';
     }
-    value(3; Certificate)
+    value(4; "Certificate")
     {
         Caption = 'Certificate';
     }
