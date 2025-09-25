@@ -17,6 +17,7 @@ tableextension 80520 "Customer Extension" extends Customer
                                                                             "Due Date" = field("Date Filter"),
                                                                             "Remaining Amount" = filter('<>0')));
             Editable = false;
+            AutoFormatType = 1;
         }
         field(80521; "Date Filter"; Date)
         {
