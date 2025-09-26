@@ -25,6 +25,7 @@ table 80503 "Customer License Header"
         {
             Caption = 'No.';
             ToolTip = 'Specifies the number of the customer license document.';
+            NotBlank = true;
             trigger OnValidate()
             begin
                 if "No." <> xRec."No." then begin
@@ -74,27 +75,25 @@ table 80503 "Customer License Header"
         field(10; "License Start Date"; Date)
         {
             Caption = 'License Start Date';
-            ToolTip = 'Specifies the overall start date for all licenses in this document.';
+            ToolTip = 'Specifies the start date for all licenses in this document.';
 
             trigger OnValidate()
             begin
                 if ("License Start Date" <> 0D) and ("License End Date" <> 0D) then
                     if "License Start Date" > "License End Date" then
                         Error(StartDateAfterEndDateErr);
-                UpdateLinesFromHeader();
             end;
         }
         field(11; "License End Date"; Date)
         {
             Caption = 'License End Date';
-            ToolTip = 'Specifies the overall end date for all licenses in this document.';
+            ToolTip = 'Specifies the end date for all licenses in this document.';
 
             trigger OnValidate()
             begin
                 if ("License Start Date" <> 0D) and ("License End Date" <> 0D) then
                     if "License Start Date" > "License End Date" then
                         Error(StartDateAfterEndDateErr);
-                UpdateLinesFromHeader();
             end;
         }
         field(12; Status; Enum "Customer License Status")
@@ -388,23 +387,7 @@ table 80503 "Customer License Header"
         ApplicationLicensingSetup.TestField("Customer License Nos.");
     end;
 
-    /// <summary>
-    /// Updates license dates on all lines when header dates change.
-    /// </summary>
-    local procedure UpdateLinesFromHeader()
-    var
-        CustomerLicenseLine: Record "Customer License Line";
-    begin
-        CustomerLicenseLine.SetRange("Document No.", "No.");
-        if CustomerLicenseLine.FindSet(true) then
-            repeat
-                if CustomerLicenseLine.Type = CustomerLicenseLine.Type::Application then begin
-                    CustomerLicenseLine."License Start Date" := "License Start Date";
-                    CustomerLicenseLine."License End Date" := "License End Date";
-                    CustomerLicenseLine.Modify();
-                end;
-            until CustomerLicenseLine.Next() = 0;
-    end;
+    // License dates are managed at header level only
 
     /// <summary>
     /// Generates license files for all application lines in the document.
@@ -430,50 +413,7 @@ table 80503 "Customer License Header"
             until CustomerLicenseLine.Next() = 0;
     end;
 
-    /// <summary>
-    /// Updates the license timeline from all application lines.
-    /// </summary>
-    procedure UpdateLicenseTimeline()
-    var
-        CustomerLicenseLine: Record "Customer License Line";
-        EarliestStartDate: Date;
-        LatestEndDate: Date;
-    begin
-        CustomerLicenseLine.SetRange("Document No.", "No.");
-        CustomerLicenseLine.SetRange(Type, CustomerLicenseLine.Type::Application);
-        CustomerLicenseLine.SetFilter("License Start Date", '<>%1', 0D);
-
-        if CustomerLicenseLine.FindSet() then begin
-            EarliestStartDate := CustomerLicenseLine."License Start Date";
-            LatestEndDate := CustomerLicenseLine."License End Date";
-
-            repeat
-                if CustomerLicenseLine."License Start Date" < EarliestStartDate then
-                    EarliestStartDate := CustomerLicenseLine."License Start Date";
-                if CustomerLicenseLine."License End Date" > LatestEndDate then
-                    LatestEndDate := CustomerLicenseLine."License End Date";
-            until CustomerLicenseLine.Next() = 0;
-
-            UpdateHeaderDates(EarliestStartDate, LatestEndDate);
-        end;
-    end;
-
-    local procedure UpdateHeaderDates(NewStartDate: Date; NewEndDate: Date)
-    var
-        IsModified: Boolean;
-    begin
-        if "License Start Date" <> NewStartDate then begin
-            "License Start Date" := NewStartDate;
-            IsModified := true;
-        end;
-        if "License End Date" <> NewEndDate then begin
-            "License End Date" := NewEndDate;
-            IsModified := true;
-        end;
-
-        if IsModified then
-            Modify();
-    end;
+    // License timeline is managed directly on the header
 
     local procedure ClearCustomerFields()
     begin

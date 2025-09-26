@@ -42,16 +42,6 @@ page 80512 "Customer Application Lines"
                     ToolTip = 'Specifies the application version.';
                     Editable = false;
                 }
-                field("License Start Date"; Rec."License Start Date")
-                {
-                    ToolTip = 'Specifies the license start date.';
-                }
-                field("License End Date"; Rec."License End Date")
-                {
-                    ToolTip = 'Specifies the license end date.';
-                    Style = Attention;
-                    StyleExpr = IsExpiredOrExpiring;
-                }
                 field("License Status"; Rec."License Status")
                 {
                     ToolTip = 'Specifies the license status.';
@@ -138,7 +128,7 @@ page 80512 "Customer Application Lines"
                     FileName := StrSubstNo(LicenseFileNameLbl,
                         CustomerLicenseHeader."Customer Name",
                         Rec."Application Name",
-                        Format(Rec."License End Date", 0, '<Year4><Month,2><Day,2>'));
+                        Format(CustomerLicenseHeader."License End Date", 0, '<Year4><Month,2><Day,2>'));
 
                     LicenseManagement.ExportLicenseFile(Rec."License ID", FileName);
                 end;
@@ -167,9 +157,8 @@ page 80512 "Customer Application Lines"
 
     trigger OnNewRecord(BelowxRec: Boolean)
     begin
+        // License dates are managed at the header level
         // Document No. should be set by filter or by calling SetDocumentNo()
-        Rec."License Start Date" := Today();
-        Rec."License End Date" := CalcDate('<+1Y>', Today());
     end;
 
     /// <summary>
@@ -191,14 +180,11 @@ page 80512 "Customer Application Lines"
     /// </summary>
     local procedure UpdateVisualCues()
     begin
-        IsExpiredOrExpiring := (Rec."License End Date" < Today()) or
-                              (Rec."License End Date" < CalcDate('<+30D>', Today()));
-
+        // License expiration is checked at header level
         IsValidationFailed := (Rec."Validation Result" <> '') and (Rec."Validation Result" <> 'Valid');
     end;
 
     var
-        IsExpiredOrExpiring: Boolean;
         IsValidationFailed: Boolean;
 
         // Messages

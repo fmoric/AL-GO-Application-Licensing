@@ -58,18 +58,6 @@ page 80513 "Customer Application List"
                     ToolTip = 'Specifies the application version.';
                     Editable = false;
                 }
-                field("License Start Date"; Rec."License Start Date")
-                {
-                    ToolTip = 'Specifies the license start date.';
-                    ShowMandatory = true;
-                }
-                field("License End Date"; Rec."License End Date")
-                {
-                    ToolTip = 'Specifies the license end date.';
-                    ShowMandatory = true;
-                    Style = Attention;
-                    StyleExpr = IsExpiredOrExpiring;
-                }
                 field("License Status"; Rec."License Status")
                 {
                     ToolTip = 'Specifies the license status.';
@@ -230,8 +218,7 @@ page 80513 "Customer Application List"
         else
             Rec."Line No." := 10000;
 
-        Rec."License Start Date" := Today();
-        Rec."License End Date" := CalcDate('<+1Y>', Today());
+        // License dates are managed at header level
     end;
 
     /// <summary>
@@ -274,16 +261,13 @@ page 80513 "Customer Application List"
     /// </summary>
     local procedure UpdateVisualCues()
     begin
-        IsExpiredOrExpiring := (Rec."License End Date" < Today()) or
-                              (Rec."License End Date" < CalcDate('<+30D>', Today()));
-
+        // License expiration is managed at header level
         IsValidationFailed := (Rec."Validation Result" <> '') and (Rec."Validation Result" <> ValidResultLbl);
     end;
 
     var
         DocumentNo: Code[20];
         CustomerName: Text[100];
-        IsExpiredOrExpiring: Boolean;
         IsValidationFailed: Boolean;
         ValidResultLbl: Label 'Valid';
 

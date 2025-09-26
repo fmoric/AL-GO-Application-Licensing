@@ -100,30 +100,7 @@ table 80504 "Customer License Line"
             TableRelation = "License Registry"."License ID";
             Editable = false;
         }
-        field(21; "License Start Date"; Date)
-        {
-            Caption = 'License Start Date';
-            ToolTip = 'Specifies the start date for this application license.';
-
-            trigger OnValidate()
-            begin
-                TestField(Type, Type::Application);
-                ValidateDateRange();
-                UpdateHeaderFromLine();
-            end;
-        }
-        field(22; "License End Date"; Date)
-        {
-            Caption = 'License End Date';
-            ToolTip = 'Specifies the end date for this application license.';
-
-            trigger OnValidate()
-            begin
-                TestField(Type, Type::Application);
-                ValidateDateRange();
-                UpdateHeaderFromLine();
-            end;
-        }
+        // License dates are now managed at the header level
         field(23; "License Status"; Enum "License Status")
         {
             Caption = 'License Status';
@@ -207,7 +184,7 @@ table 80504 "Customer License Line"
         {
             Clustered = true;
         }
-        key(Application; "Application ID", "License Start Date")
+        key(Application; "Application ID")
         {
         }
         key(LicenseId; "License ID")
@@ -220,7 +197,7 @@ table 80504 "Customer License Line"
 
     fieldgroups
     {
-        fieldgroup(DropDown; Type, "Application Name", "License Start Date", "License End Date", "License Status")
+        fieldgroup(DropDown; Type, "Application Name", "License Status")
         {
         }
         fieldgroup(Brick; Type, "Application Name", Publisher, Version, "License Status")
@@ -260,29 +237,7 @@ table 80504 "Customer License Line"
             CleanupLicenseRegistry();
     end;
 
-    /// <summary>
-    /// Validates that the date range is logical.
-    /// </summary>
-    local procedure ValidateDateRange()
-    begin
-        if ("License Start Date" <> 0D) and ("License End Date" <> 0D) then
-            if "License Start Date" > "License End Date" then
-                Error(StartDateAfterEndDateErr);
-    end;
-
-    /// <summary>
-    /// Updates the header timeline from line changes.
-    /// </summary>
-    local procedure UpdateHeaderFromLine()
-    var
-        CustomerLicenseHeader: Record "Customer License Header";
-    begin
-        if not CustomerLicenseHeader.Get("Document No.") then
-            exit;
-
-        // Let the header calculate its own timeline from all lines
-        CustomerLicenseHeader.UpdateLicenseTimeline();
-    end;
+    // License dates are managed at header level - no validation needed on lines
 
     /// <summary>
     /// Clears application fields when Application ID is cleared.
@@ -301,8 +256,6 @@ table 80504 "Customer License Line"
     local procedure ClearLicenseFields()
     begin
         Clear("License ID");
-        Clear("License Start Date");
-        Clear("License End Date");
         Clear("License Status");
         Clear("Licensed Features");
         Clear("License Generated");
@@ -343,11 +296,13 @@ table 80504 "Customer License Line"
     begin
         TestField(Type, Type::Application);
         TestField("Application ID");
-        TestField("License Start Date");
-        TestField("License End Date");
 
         if not CustomerLicenseHeader.Get("Document No.") then
             Error(CustomerHeaderNotFoundErr, "Document No.");
+
+        // License dates come from header
+        CustomerLicenseHeader.TestField("License Start Date");
+        CustomerLicenseHeader.TestField("License End Date");
 
         // TODO: Implement license generation logic
         LicenseId := CreateGuid();
@@ -368,9 +323,13 @@ table 80504 "Customer License Line"
     /// </summary>
     procedure ValidateLicense(): Boolean
     var
+        CustomerLicenseHeader: Record "Customer License Header";
         IsValid: Boolean;
     begin
         if IsNullGuid("License ID") then
+            exit(false);
+
+        if not CustomerLicenseHeader.Get("Document No.") then
             exit(false);
 
         // TODO: Implement license validation logic
@@ -379,10 +338,10 @@ table 80504 "Customer License Line"
 
         if IsValid then begin
             "Validation Result" := CopyStr(ValidLbl, 1, MaxStrLen("Validation Result"));
-            if "License End Date" < Today() then
+            if CustomerLicenseHeader."License End Date" < Today() then
                 "License Status" := "License Status"::Expired
             else
-                if "License Start Date" > Today() then
+                if CustomerLicenseHeader."License Start Date" > Today() then
                     "License Status" := "License Status"::Suspended
                 else
                     "License Status" := "License Status"::Active;
@@ -422,7 +381,6 @@ table 80504 "Customer License Line"
     end;
 
     var
-        StartDateAfterEndDateErr: Label 'The License Start Date cannot be after the License End Date.';
         CustomerHeaderNotFoundErr: Label 'Customer header not found for document %1.', Comment = '%1 = Document No.';
         HeaderReleasedErr: Label 'Cannot modify lines for released document %1.', Comment = '%1 = Document No.';
         ValidLbl: Label 'Valid';

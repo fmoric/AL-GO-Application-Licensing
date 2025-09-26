@@ -176,12 +176,19 @@ table 80501 "License Registry"
     /// </summary>
     /// <param name="CustomerLicenseLine">The Customer License Line to link to.</param>
     procedure LinkToCustomerLicenseLine(var CustomerLicenseLine: Record "Customer License Line")
+    var
+        CustomerLicenseHeader: Record "Customer License Header";
     begin
         "Document No." := CustomerLicenseLine."Document No.";
         "Document Line No." := CustomerLicenseLine."Line No.";
         "App ID" := CustomerLicenseLine."Application ID";
-        "Valid From" := CustomerLicenseLine."License Start Date";
-        "Valid To" := CustomerLicenseLine."License End Date";
+
+        // Get license dates from the header
+        if CustomerLicenseHeader.Get(CustomerLicenseLine."Document No.") then begin
+            "Valid From" := CustomerLicenseHeader."License Start Date";
+            "Valid To" := CustomerLicenseHeader."License End Date";
+        end;
+
         Features := CustomerLicenseLine."Licensed Features";
         Status := CustomerLicenseLine."License Status";
     end;

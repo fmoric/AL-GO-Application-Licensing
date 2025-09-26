@@ -79,9 +79,13 @@ page 80511 "Customer License"
                 Caption = 'License Information';
                 field("License Start Date"; Rec."License Start Date")
                 {
+                    ShowMandatory = true;
+                    ToolTip = 'Specifies the start date for all licenses in this document.';
                 }
                 field("License End Date"; Rec."License End Date")
                 {
+                    ShowMandatory = true;
+                    ToolTip = 'Specifies the end date for all licenses in this document.';
                 }
                 field(Status; Rec.Status)
                 {
@@ -254,8 +258,7 @@ page 80511 "Customer License"
             CustomerLicenseLine."Line No." := NextLineNo;
             CustomerLicenseLine.Type := CustomerLicenseLine.Type::Application;
             CustomerLicenseLine.Validate("Application ID", ApplicationRegistry."App ID");
-            CustomerLicenseLine."License Start Date" := Today();
-            CustomerLicenseLine."License End Date" := CalcDate('<+1Y>', Today());
+            // License dates are managed at the header level
             CustomerLicenseLine.Insert(true);
 
             CurrPage.Update(false);

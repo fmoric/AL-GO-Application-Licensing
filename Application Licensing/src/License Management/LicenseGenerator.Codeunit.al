@@ -134,19 +134,21 @@ codeunit 80502 "License Generator"
         // Validate the Customer License Line
         CustomerLicenseLine.TestField(Type, CustomerLicenseLine.Type::Application);
         CustomerLicenseLine.TestField("Application ID");
-        CustomerLicenseLine.TestField("License Start Date");
-        CustomerLicenseLine.TestField("License End Date");
 
         // Get the Customer License Header
         if not CustomerLicenseHeader.Get(CustomerLicenseLine."Document No.") then
             Error('Customer License Header %1 not found.', CustomerLicenseLine."Document No.");
 
+        // License dates come from the header
+        CustomerLicenseHeader.TestField("License Start Date");
+        CustomerLicenseHeader.TestField("License End Date");
+
         // Generate the license using the main procedure
         if GenerateCertificateSignedLicense(
             CustomerLicenseLine."Application ID",
             CustomerLicenseHeader."Customer Name",
-            CustomerLicenseLine."License Start Date",
-            CustomerLicenseLine."License End Date",
+            CustomerLicenseHeader."License Start Date",
+            CustomerLicenseHeader."License End Date",
             CustomerLicenseLine."Licensed Features",
             KeyId,
             LicenseId,
@@ -178,8 +180,9 @@ codeunit 80502 "License Generator"
     begin
         if LicenseRegistry.Get(LicenseId) then begin
             LicenseRegistry.LinkToCustomerLicenseLine(CustomerLicenseLine);
-            LicenseRegistry.Modify(true);
             LicenseRegistry.UpdateCustomerLicenseLine();
+            // Record is modified by the above procedures
+            LicenseRegistry.Modify(true);
         end;
     end;
 

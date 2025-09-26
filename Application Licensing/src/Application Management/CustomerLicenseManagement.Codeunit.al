@@ -60,11 +60,9 @@ codeunit 80510 "Customer License Management"
     /// </summary>
     /// <param name="DocumentNo">The document number.</param>
     /// <param name="AppId">The application ID.</param>
-    /// <param name="ValidFrom">License start date.</param>
-    /// <param name="ValidTo">License end date.</param>
     /// <param name="Features">Licensed features.</param>
     /// <returns>True if the application was added successfully.</returns>
-    procedure AddApplicationToCustomer(DocumentNo: Code[20]; AppId: Guid; ValidFrom: Date; ValidTo: Date; Features: Text[250]): Boolean
+    procedure AddApplicationToCustomer(DocumentNo: Code[20]; AppId: Guid; Features: Text[250]): Boolean
     var
         CustomerLicenseHeader: Record "Customer License Header";
         CustomerLicenseLine: Record "Customer License Line";
@@ -86,8 +84,6 @@ codeunit 80510 "Customer License Management"
         CustomerLicenseLine."Document No." := DocumentNo;
         CustomerLicenseLine."Line No." := GetNextLineNo(DocumentNo);
         CustomerLicenseLine.Validate("Application ID", AppId);
-        CustomerLicenseLine."License Start Date" := ValidFrom;
-        CustomerLicenseLine."License End Date" := ValidTo;
         CustomerLicenseLine."Licensed Features" := Features;
 
         exit(CustomerLicenseLine.Insert(true));
@@ -194,8 +190,6 @@ codeunit 80510 "Customer License Management"
             CustomerLicenseLine."Line No." := LineNo;
             CustomerLicenseLine.Validate("Application ID", LicenseRegistry."App ID");
             CustomerLicenseLine."License ID" := LicenseRegistry."License ID";
-            CustomerLicenseLine."License Start Date" := LicenseRegistry."Valid From";
-            CustomerLicenseLine."License End Date" := LicenseRegistry."Valid To";
             CustomerLicenseLine."Licensed Features" := LicenseRegistry.Features;
             CustomerLicenseLine."License Status" := LicenseRegistry.Status;
             CustomerLicenseLine."License Generated" := true;
@@ -203,16 +197,19 @@ codeunit 80510 "Customer License Management"
             CustomerLicenseLine."Validation Result" := LicenseRegistry."Validation Result";
             CustomerLicenseLine.Insert(true);
 
+            // Update header license dates from registry
+            if (CustomerLicenseHeader."License Start Date" = 0D) or
+               (LicenseRegistry."Valid From" < CustomerLicenseHeader."License Start Date") then
+                CustomerLicenseHeader."License Start Date" := LicenseRegistry."Valid From";
+            if (CustomerLicenseHeader."License End Date" = 0D) or
+               (LicenseRegistry."Valid To" > CustomerLicenseHeader."License End Date") then
+                CustomerLicenseHeader."License End Date" := LicenseRegistry."Valid To";
+            CustomerLicenseHeader.Modify(true);
+
             MigratedCount += 1;
         until LicenseRegistry.Next() = 0;
 
-        // Update all customer headers with timeline information
-        CustomerLicenseHeader.Reset();
-        if CustomerLicenseHeader.FindSet() then
-            repeat
-                CustomerLicenseHeader.UpdateLicenseTimeline();
-                CustomerLicenseHeader.Modify(true);
-            until CustomerLicenseHeader.Next() = 0;
+        // License dates have been updated during migration
 
         Message(MigrationCompletedMsg, MigratedCount);
     end;
