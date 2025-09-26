@@ -89,22 +89,6 @@ page 80500 "Application Registry"
                     CurrPage.Update(false);
                 end;
             }
-            action(GenerateLicense)
-            {
-
-                Caption = 'Generate License';
-                Image = Certificate;
-                ToolTip = 'Generate a new license for this application.';
-                Enabled = Rec.Active;
-
-                trigger OnAction()
-                var
-                    LicenseGeneration: Page "License Generation";
-                begin
-                    LicenseGeneration.SetApplicationId(Rec."App ID");
-                    LicenseGeneration.RunModal();
-                end;
-            }
             action(ViewLicenses)
             {
 
@@ -123,16 +107,6 @@ page 80500 "Application Registry"
                 end;
             }
         }
-        area(Navigation)
-        {
-        }
-    }
 
-    trigger OnOpenPage()
-    var
-        LicenseManagementCU: Codeunit "License Management";
-    begin
-        // Initialize licensing system if needed
-        LicenseManagementCU.InitializeLicensingSystem();
-    end;
+    }
 }

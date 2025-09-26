@@ -52,14 +52,7 @@ page 80504 "License Management Center"
                     RunObject = page "License Registry";
                     ToolTip = 'View and manage generated licenses.';
                 }
-                action(GenerateLicense)
-                {
-                    ApplicationArea = All;
-                    Caption = 'Generate License';
-                    Image = Certificate;
-                    RunObject = page "License Generation";
-                    ToolTip = 'Generate a new license.';
-                }
+
                 action(ImportLicense)
                 {
                     ApplicationArea = All;

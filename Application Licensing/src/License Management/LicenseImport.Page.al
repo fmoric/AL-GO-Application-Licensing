@@ -23,38 +23,6 @@ page 80507 "License Import"
     {
         area(Content)
         {
-            group(ImportFile)
-            {
-                Caption = 'License File Import';
-                field(LicenseFileContent; LicenseFileContent)
-                {
-
-                    Caption = 'License File Content';
-                    ToolTip = 'Specifies the content of the license file to be imported. You can paste the content directly or use the "Import from File" button.';
-                    MultiLine = true;
-                    ShowMandatory = true;
-
-                    trigger OnValidate()
-                    begin
-                        if LicenseFileContent <> '' then begin
-                            ParseLicenseFile();
-                            CurrPage.Update(false);
-                        end;
-                    end;
-                }
-                field(ImportFromFile; ImportFromFileVisible)
-                {
-
-                    Caption = 'Import from File';
-                    ToolTip = 'Specifies the license file to import. Click the button to browse and select a file.';
-                    Editable = false;
-
-                    trigger OnAssistEdit()
-                    begin
-                        ImportLicenseFromFile();
-                    end;
-                }
-            }
             group(ParsedData)
             {
                 Caption = 'Parsed License Information';
@@ -148,19 +116,6 @@ page 80507 "License Import"
                     ImportParsedLicense();
                 end;
             }
-            action(ValidateLicense)
-            {
-
-                Caption = 'Validate License';
-                Image = ValidateEmailLoggingSetup;
-                ToolTip = 'Validate the license signature and content.';
-                Enabled = ShowParsedData;
-
-                trigger OnAction()
-                begin
-                    ValidateParsedLicense();
-                end;
-            }
             action(ClearData)
             {
 
@@ -226,58 +181,6 @@ page 80507 "License Import"
         ValidationSuccess := false;
     end;
 
-    /// <summary>
-    /// Imports license content from a file.
-    /// </summary>
-    local procedure ImportLicenseFromFile()
-    var
-        InStream: InStream;
-        FileName: Text;
-        FileContent: Text;
-        TempText: Text;
-    begin
-        if UploadIntoStream(ImportLicenseDialogLbl, '', ImportLicenseFileFilterLbl, FileName, InStream) then begin
-            // Read the entire file content
-            FileContent := '';
-            while not InStream.EOS() do begin
-                InStream.ReadText(TempText);
-                if FileContent <> '' then
-                    FileContent += '\' + TempText
-                else
-                    FileContent := TempText;
-            end;
-
-            if FileContent <> '' then begin
-                LicenseFileContent := FileContent;
-                ParseLicenseFile();
-                CurrPage.Update(false);
-            end;
-        end;
-    end;
-
-    /// <summary>
-    /// Parses the license file content and extracts license information.
-    /// </summary>
-    local procedure ParseLicenseFile()
-    var
-        LicenseContent: Text;
-        SignatureContent: Text;
-    begin
-        ClearImportData();
-
-        if not ExtractLicenseComponents(LicenseFileContent, LicenseContent, SignatureContent) then
-            Error(InvalidLicenseFormatErr);
-
-        if not ParseLicenseContent(LicenseContent) then
-            Error(InvalidLicenseFormatErr);
-
-        ParsedSignature := CopyStr(SignatureContent, 1, MaxStrLen(ParsedSignature));
-        ShowParsedData := true;
-        CanImport := true;
-
-        // Automatically validate the license
-        ValidateParsedLicense();
-    end;
 
     /// <summary>
     /// Extracts license content and signature from the license file.
@@ -340,60 +243,6 @@ page 80507 "License Import"
         exit(not IsNullGuid(ParsedLicenseId) and not IsNullGuid(ParsedAppId));
     end;
 
-    /// <summary>
-    /// Validates the parsed license using the license validation system.
-    /// </summary>
-    local procedure ValidateParsedLicense()
-    var
-        ApplicationRegistry: Record "Application Registry";
-    begin
-        ValidationSuccess := false;
-        ValidationStatus := '';
-
-        // Check if application exists
-        if not ApplicationRegistry.Get(ParsedAppId) then begin
-            ValidationStatus := StrSubstNo(ApplicationNotFoundWarningMsg, ParsedAppName, ParsedAppId);
-            exit;
-        end;
-
-        // Create a temporary license record for validation
-        if ValidateTemporaryLicense() then begin
-            ValidationStatus := ValidLicenseLbl;
-            ValidationSuccess := true;
-        end else begin
-            ValidationStatus := InvalidLicenseLbl;
-            ValidationSuccess := false;
-        end;
-    end;
-
-    /// <summary>
-    /// Creates a temporary license record and validates it.
-    /// </summary>
-    /// <returns>True if the license is valid, false otherwise.</returns>
-    local procedure ValidateTemporaryLicense(): Boolean
-    var
-        ApplicationRegistry: Record "Application Registry";
-        TempLicenseRegistry: Record "License Registry" temporary;
-        LicenseGenerator: Codeunit "License Generator";
-    begin
-        if not ApplicationRegistry.Get(ParsedAppId) then
-            exit(false);
-
-        // Create temporary license record
-        TempLicenseRegistry.Init();
-        TempLicenseRegistry."License ID" := ParsedLicenseId;
-        TempLicenseRegistry."App ID" := ParsedAppId;
-        TempLicenseRegistry."Customer Name" := ParsedCustomerName;
-        TempLicenseRegistry."Valid From" := ParsedValidFrom;
-        TempLicenseRegistry."Valid To" := ParsedValidTo;
-        TempLicenseRegistry.Features := ParsedFeatures;
-        TempLicenseRegistry."Digital Signature" := ParsedSignature;
-        TempLicenseRegistry.Status := TempLicenseRegistry.Status::Active;
-        TempLicenseRegistry.Insert(false);
-
-        // Validate the license
-        exit(LicenseGenerator.ValidateLicense(ParsedLicenseId));
-    end;
 
     /// <summary>
     /// Imports the parsed license into the license registry.

@@ -83,24 +83,6 @@ page 80501 "Application Card"
     {
         area(Processing)
         {
-            action(GenerateLicense)
-            {
-
-                Caption = 'Generate License';
-                Image = Certificate;
-                ToolTip = 'Generate a new license for this application.';
-                Enabled = Rec.Active and not IsNewRecord;
-
-                trigger OnAction()
-                var
-                    LicenseGeneration: Page "License Generation";
-                begin
-                    if not IsNullGuid(Rec."App ID") then begin
-                        LicenseGeneration.SetApplicationId(Rec."App ID");
-                        LicenseGeneration.RunModal();
-                    end;
-                end;
-            }
             action(ViewLicenses)
             {
 
