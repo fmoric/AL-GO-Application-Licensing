@@ -1,13 +1,23 @@
+﻿# AL-Go Application Licensing - Modular Architecture
+# Includes Base Application, Generator Application, and Legacy Application
+
+# AL Build Artifacts
 *.app
 *.flf
 *.bclicense
 *.g.xlf
+
+# System Files
 .DS_Store
 Thumbs.db
+
+# Test Results
 TestResults*.xml
 bcptTestResults*.json
 BuildOutput.txt
 rad.json
+
+# AL-Go Build Directories
 .output/
 .dependencies/
 .buildartifacts/
@@ -18,4 +28,6 @@ rad.json
 .altestrunner/
 .snapshots/
 cache_*
+
+# Office Files
 ~$*

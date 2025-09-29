@@ -1,14 +1,25 @@
-{
+﻿{
     "folders": [
         {
+            "name": "Application Licensing (Original)",
             "path": "Application Licensing"
         },
         {
+            "name": "Base Application",
+            "path": "Application Licensing Base"
+        },
+        {
+            "name": "Generator Application", 
+            "path": "Application Licensing Generator"
+        },
+        {
+            "name": "AL-Go Configuration",
             "path": ".AL-Go"
         }
     ],
     "settings": {
-        "powershell.cwd": ".AL-Go"
+        "powershell.cwd": ".AL-Go",
+        "al.defaultLaunchConfigurationName": "Application Licensing Base"
     },
     "CRS.FileNamePattern": "<ObjectNameShort>.<ObjectTypeShortPascalCase>.al",
     "CRS.FileNamePatternExtensions": "<ObjectNameShort>.<ObjectTypeShortPascalCase>.al",

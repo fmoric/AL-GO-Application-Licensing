@@ -1,0 +1,43 @@
+{
+  "id": "3b9f1067-5337-4f39-b645-93afa31c5995",
+  "name": "Application Licensing Generator",
+  "publisher": "BE-terna",
+  "version": "26.0.0.0",
+  "brief": "License generation extension for Application Licensing Base.",
+  "description": "This extension adds license generation capabilities to the Application Licensing Base. It requires the Base application to function and provides cryptographic license generation, key management, and customer license document workflows.",
+  "privacyStatement": "https://www.be-terna.com/legal",
+  "EULA": "https://dev.azure.com/AD-NAV/ADL-Public/_wiki/wikis/BC%20Documentation/641/Service-Agreement",
+  "help": "https://dev.azure.com/AD-NAV/ADL-Public/_wiki/wikis/BC%20Documentation/",
+  "url": "https://dev.azure.com/AD-NAV/ADL-Public/_wiki/wikis/BC%20Documentation/642/Support-Link",
+  "logo": "./logo/BE.logo.216x216.png",
+  "dependencies": [
+    {
+      "id": "2a8ef067-5337-4f39-b645-93afa31c5995",
+      "name": "Application Licensing Base",
+      "publisher": "BE-terna",
+      "version": "26.0.0.0"
+    }
+  ],
+  "screenshots": [],
+  "platform": "1.0.0.0",
+  "application": "26.0.0.0",
+  "idRanges": [
+    {
+      "from": 80525,
+      "to": 80549
+    }
+  ],
+  "resourceExposurePolicy": {
+    "allowDebugging": true,
+    "allowDownloadingSource": true,
+    "includeSourceInSymbolFile": true
+  },  
+  "contextSensitiveHelpUrl": "https://docs.microsoft.com/dynamics365/business-central/",  
+  "runtime": "15.0",
+  "features": [
+    "NoImplicitWith",
+    "TranslationFile"
+  ],
+  "preprocessorSymbols": ["DBG"],
+   "applicationInsightsConnectionString": "InstrumentationKey=98f28ed6-02b2-48f2-a974-87d8e08d6417;IngestionEndpoint=https://westeurope-5.in.applicationinsights.azure.com/;LiveEndpoint=https://westeurope.livediagnostics.monitor.azure.com/"
+}
