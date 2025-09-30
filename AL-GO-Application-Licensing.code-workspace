@@ -1,4 +1,4 @@
-﻿{
+{
     "folders": [
         {
             "name": "Application Licensing (Original)",
@@ -9,12 +9,15 @@
             "path": "Application Licensing Base"
         },
         {
-            "name": "Generator Application", 
+            "name": "Generator Application",
             "path": "Application Licensing Generator"
         },
         {
             "name": "AL-Go Configuration",
             "path": ".AL-Go"
+        },
+        {
+            "path": ".github"
         }
     ],
     "settings": {

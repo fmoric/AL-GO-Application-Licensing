@@ -76,6 +76,32 @@ page 80529 "Crypto Key Management"
                     CryptoKeyManager.UploadPublicKey(Rec);
                 end;
             }
+            action(DownloadPublicKey)
+            {
+                ApplicationArea = All;
+                Caption = 'Download Public Key';
+                Image = Import;
+                ToolTip = 'Download a public key to a PEM file.';
+                trigger OnAction()
+                var
+                    CryptoKeyManager: Codeunit "Crypto Key Manager";
+                begin
+                    CryptoKeyManager.DownloadPublicKey(Rec);
+                end;
+            }
+            action(ImpoertCertificate)
+            {
+                ApplicationArea = All;
+                Caption = 'Import Certificate';
+                Image = Import;
+                ToolTip = 'Import a certificate from a .p12 file.';
+                trigger OnAction()
+                var
+                    CryptoKeyManager: Codeunit "Crypto Key Manager";
+                begin
+                    CryptoKeyManager.UploadAndValidateCertificate(Rec);
+                end;
+            }
 
         }
         area(Promoted)
@@ -83,6 +109,12 @@ page 80529 "Crypto Key Management"
             group(Category_Process)
             {
                 actionref(ImportPublicKey_Promoted; ImportPublicKey)
+                {
+                }
+                actionref(DownloadPublicKey_Promoted; DownloadPublicKey)
+                {
+                }
+                actionref(ImpoertCertificate_Promoted; ImpoertCertificate)
                 {
                 }
             }
