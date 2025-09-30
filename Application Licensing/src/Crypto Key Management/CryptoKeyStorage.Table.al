@@ -95,10 +95,12 @@ table 80502 "Crypto Key Storage"
             Caption = 'Public Key';
             ToolTip = 'Specifies the public key in binary format.';
         }
-        field(13; "Private Key"; Blob)
+        field(13; "Private Key GUID"; Guid)
         {
-            Caption = 'Private Key';
-            ToolTip = 'Specifies the private key in binary format.';
+            Caption = 'Private Key GUID';
+            Editable = false;
+            AllowInCustomizations = Never;
+            ToolTip = 'Specifies the GUID for the private key in secure storage.';
         }
         field(14; Active; Boolean)
         {

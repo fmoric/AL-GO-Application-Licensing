@@ -5,7 +5,20 @@ using ApplicationLicensing.Pages;
 using System.Apps;
 /// <summary>
 /// Table Application Registry (ID 80500).
-/// Stores registered applications with version control and activation status.
+/// Master registry of available applications that can be licensed to customers.
+/// 
+/// IMPORTANT: This table is now part of the redesigned Application Management system
+/// that follows Business Central standard header/lines pattern:
+/// - Application Registry: Master list of available applications (this table)
+/// - Customer License Header: Customer information and license timeline (Table 80503)  
+/// - Customer License Line: Applications assigned to each customer (Table 80504)
+/// 
+/// Use Customer License pages for customer-specific license management:
+/// - Customer License List (Page 80510)
+/// - Customer License Card (Page 80511)
+/// - Customer Application List (Page 80513)
+/// 
+/// Migration: Use License Migration page (80515) to convert existing data.
 /// </summary>
 table 80500 "Application Registry"
 {

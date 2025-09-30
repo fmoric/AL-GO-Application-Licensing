@@ -68,27 +68,6 @@ page 80502 "License Registry"
     {
         area(Processing)
         {
-            action(ValidateLicense)
-            {
-
-                Caption = 'Validate License';
-                Image = ValidateEmailLoggingSetup;
-                ToolTip = 'Validate the selected license and check for tampering.';
-
-                trigger OnAction()
-                var
-                    LicenseGenerator: Codeunit "License Generator";
-                    IsValid: Boolean;
-                begin
-                    IsValid := LicenseGenerator.ValidateLicense(Rec."License ID");
-                    if IsValid then
-                        Message(LicenseValidationSuccessMsg)
-                    else
-                        Message(LicenseValidationFailedMsg, Rec."Validation Result");
-
-                    CurrPage.Update(false);
-                end;
-            }
             action(RevokeLicense)
             {
 
@@ -124,21 +103,6 @@ page 80502 "License Registry"
                 begin
                     FileName := StrSubstNo(LicenseFileNameFormatLbl, Rec."Customer Name", Format(Rec."Valid To", 0, DateFormatLbl));
                     LicenseManagement.ExportLicenseFile(Rec."License ID", FileName);
-                end;
-            }
-            action(GenerateNewLicense)
-            {
-
-                Caption = 'Generate New License';
-                Image = Certificate;
-                ToolTip = 'Generate a new license.';
-
-                trigger OnAction()
-                var
-                    LicenseGeneration: Page "License Generation";
-                begin
-                    LicenseGeneration.RunModal();
-                    CurrPage.Update(false);
                 end;
             }
             action(ImportLicense)

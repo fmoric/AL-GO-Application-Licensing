@@ -1,0 +1,44 @@
+{
+  "id": "2a8ef067-5337-4f39-b645-93afa31c5995",
+  "name": "Application Licensing Base",
+  "publisher": "BE-terna",
+  "version": "26.0.0.0",
+  "brief": "Base application for license import, validation and management.",
+  "description": "This is the base application that provides core functionality for importing, validating, and managing Business Central application licenses. It serves as the foundation for license management without generation capabilities.",
+  "privacyStatement": "https://www.be-terna.com/legal",
+  "EULA": "https://dev.azure.com/AD-NAV/ADL-Public/_wiki/wikis/BC%20Documentation/641/Service-Agreement",
+  "help": "https://dev.azure.com/AD-NAV/ADL-Public/_wiki/wikis/BC%20Documentation/",
+  "url": "https://dev.azure.com/AD-NAV/ADL-Public/_wiki/wikis/BC%20Documentation/642/Support-Link",
+  "logo": "./logo/BE.logo.216x216.png",
+  "dependencies": [],
+  "screenshots": [],
+  "platform": "1.0.0.0",
+  "application": "26.0.0.0",
+  "idRanges": [
+    {
+      "from": 80500,
+      "to": 80524
+    }
+  ],
+  "resourceExposurePolicy": {
+    "allowDebugging": true,
+    "allowDownloadingSource": true,
+    "includeSourceInSymbolFile": true
+  },  
+  "internalsVisibleTo": [
+    {
+      "id": "3b9f1067-5337-4f39-b645-93afa31c5995",
+      "publisher": "BE-terna",
+      "name": "Application Licensing Generator"
+
+    }
+  ],
+  "contextSensitiveHelpUrl": "https://docs.microsoft.com/dynamics365/business-central/",  
+  "runtime": "15.0",
+  "features": [
+    "NoImplicitWith",
+    "TranslationFile"
+  ],
+  "preprocessorSymbols": ["DBG"],
+   "applicationInsightsConnectionString": "InstrumentationKey=98f28ed6-02b2-48f2-a974-87d8e08d6417;IngestionEndpoint=https://westeurope-5.in.applicationinsights.azure.com/;LiveEndpoint=https://westeurope.livediagnostics.monitor.azure.com/"
+}
