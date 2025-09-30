@@ -13,7 +13,7 @@ using System.Apps;
 /// for all license records, whether imported from external sources or created by
 /// the Generator Application.
 /// </summary>
-table 80500 "License Registry"
+table 80501 "License Registry"
 {
     DataClassification = SystemMetadata;
     Caption = 'License Registry';

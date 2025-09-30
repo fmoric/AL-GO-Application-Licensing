@@ -64,8 +64,8 @@ table 80529 "Customer License Line"
                     ClearApplicationFields();
                     exit;
                 end;
-
-                if ApplicationRegistry.Get("Application ID") then begin
+                ApplicationRegistry.SetRange("App ID", "Application ID");
+                if ApplicationRegistry.FindFirst() then begin
                     "Application Name" := ApplicationRegistry."App Name";
                     Publisher := ApplicationRegistry.Publisher;
                     Version := ApplicationRegistry.Version;

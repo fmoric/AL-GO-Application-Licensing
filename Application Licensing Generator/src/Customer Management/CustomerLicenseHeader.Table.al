@@ -4,6 +4,7 @@ using ApplicationLicensing.Generator.Pages;
 using ApplicationLicensing.Generator.Enums;
 using Microsoft.Sales.Customer;
 using Microsoft.Foundation.NoSeries;
+using ApplicationLicensing.Base.Tables;
 
 /// <summary>
 /// Table Customer License Header (ID 80525).
@@ -25,7 +26,6 @@ table 80528 "Customer License Header"
         {
             Caption = 'No.';
             ToolTip = 'Specifies the number of the customer license document.';
-            NotBlank = true;
             trigger OnValidate()
             begin
                 if "No." <> xRec."No." then begin
@@ -244,10 +244,11 @@ table 80528 "Customer License Header"
     var
         CustomerLicHeader2: Record "Customer License Header";
         NoSeries: Codeunit "No. Series";
+        FormatTok: Label '<%1D>', Locked = true;
         NoSeriesCode: Code[20];
 
     begin
-        ApplicationLicensingSetup := ApplicationLicensingSetup.GetSetup();
+        ApplicationLicensingSetup.GetSetup();
 
         if "No." = '' then begin
             TestNoSeries();
@@ -263,6 +264,10 @@ table 80528 "Customer License Header"
         end;
         if "Document Date" = 0D then
             "Document Date" := WorkDate();
+
+        "License Start Date" := "Document Date";
+        if ApplicationLicensingSetup."Default License Duration" <> 0 then
+            "License End Date" := CalcDate(StrSubstNo(FormatTok, ApplicationLicensingSetup."Default License Duration"), "License Start Date");
 
         Status := Status::Open;
     end;
@@ -318,7 +323,7 @@ table 80528 "Customer License Header"
     /// </summary>
     procedure TestNoSeries()
     begin
-        ApplicationLicensingSetup := ApplicationLicensingSetup.GetSetup();
+        ApplicationLicensingSetup.GetSetup();
         ApplicationLicensingSetup.TestField("Customer License Nos.");
     end;
 
@@ -368,7 +373,7 @@ table 80528 "Customer License Header"
         NoSeries: Codeunit "No. Series";
         NoSeriesCode: Code[20];
     begin
-        ApplicationLicensingSetup := ApplicationLicensingSetup.GetSetup();
+        ApplicationLicensingSetup.GetSetup();
         NoSeriesCode := ApplicationLicensingSetup."Customer License Nos.";
 
         if NoSeries.IsAutomatic(NoSeriesCode) then
@@ -388,7 +393,7 @@ table 80528 "Customer License Header"
         AlreadyExistsErr: Label 'The Customer License No. %1 already exists.', Comment = '%1 = Customer License No.';
     begin
         CustomerLicHeader.Copy(Rec);
-        ApplicationLicensingSetup := ApplicationLicensingSetup.GetSetup();
+        ApplicationLicensingSetup.GetSetup();
         CustomerLicHeader.TestNoSeries();
         if NoSeries.LookupRelatedNoSeries(CustomerLicHeader.GetNoSeriesCode(), OldCustomerLicHeader."No. Series", CustomerLicHeader."No. Series") then begin
             CustomerLicHeader."No." := NoSeries.GetNextNo(CustomerLicHeader."No. Series");

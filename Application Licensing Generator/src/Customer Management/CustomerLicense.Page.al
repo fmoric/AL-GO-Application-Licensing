@@ -167,22 +167,7 @@ page 80532 "Customer License"
                     CurrPage.Update(false);
                 end;
             }
-            action(ValidateAllLicenses)
-            {
-                Caption = 'Validate All Licenses';
-                Image = ValidateEmailLoggingSetup;
-                ToolTip = 'Validate all licenses for this customer.';
-                Promoted = true;
-                PromotedCategory = Process;
 
-                trigger OnAction()
-                var
-                    CustomerLicenseManagement: Codeunit "Customer License Management";
-                begin
-                    CustomerLicenseManagement.ValidateAllCustomerLicenses(Rec."No.");
-                    CurrPage.Update(false);
-                end;
-            }
         }
         area(Navigation)
         {
@@ -245,22 +230,24 @@ page 80532 "Customer License"
     begin
         ApplicationList.LookupMode(true);
         if ApplicationList.RunModal() = Action::LookupOK then begin
-            ApplicationList.GetRecord(ApplicationRegistry);
+            ApplicationList.SetSelectionFilter(ApplicationRegistry);
+            if ApplicationRegistry.FindSet() then
+                repeat
 
-            CustomerLicenseLine.SetRange("Document No.", Rec."No.");
-            if CustomerLicenseLine.FindLast() then
-                NextLineNo := CustomerLicenseLine."Line No." + 10000
-            else
-                NextLineNo := 10000;
+                    CustomerLicenseLine.SetRange("Document No.", Rec."No.");
+                    if CustomerLicenseLine.FindLast() then
+                        NextLineNo := CustomerLicenseLine."Line No." + 10000
+                    else
+                        NextLineNo := 10000;
 
-            CustomerLicenseLine.Init();
-            CustomerLicenseLine."Document No." := Rec."No.";
-            CustomerLicenseLine."Line No." := NextLineNo;
-            CustomerLicenseLine.Type := CustomerLicenseLine.Type::Application;
-            CustomerLicenseLine.Validate("Application ID", ApplicationRegistry."App ID");
-            // License dates are managed at the header level
-            CustomerLicenseLine.Insert(true);
-
+                    CustomerLicenseLine.Init();
+                    CustomerLicenseLine."Document No." := Rec."No.";
+                    CustomerLicenseLine."Line No." := NextLineNo;
+                    CustomerLicenseLine.Type := CustomerLicenseLine.Type::Application;
+                    CustomerLicenseLine.Validate("Application ID", ApplicationRegistry."App ID");
+                    // License dates are managed at the header level
+                    CustomerLicenseLine.Insert(true);
+                until ApplicationRegistry.Next() = 0;
             CurrPage.Update(false);
         end;
     end;

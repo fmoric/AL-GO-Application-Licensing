@@ -7,7 +7,7 @@ using ApplicationLicensing.Base.Tables;
 /// Page License Registry (ID 80501).
 /// List page for viewing and managing imported licenses.
 /// </summary>
-page 80500 "License Registry"
+page 80502 "License Registry"
 {
     PageType = List;
     ApplicationArea = All;
