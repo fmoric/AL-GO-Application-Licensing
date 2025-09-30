@@ -10,7 +10,7 @@ using ApplicationLicensing.Base.Pages;
 /// List page for managing applications assigned to a specific customer.
 /// Provides full CRUD operations for customer license lines.
 /// </summary>
-page 80529 "Customer Application List"
+page 80531 "Customer Application List"
 {
     PageType = List;
     ApplicationArea = All;

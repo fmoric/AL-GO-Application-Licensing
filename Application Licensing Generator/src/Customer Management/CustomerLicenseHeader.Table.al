@@ -2,7 +2,7 @@ namespace ApplicationLicensing.Generator.Tables;
 
 using ApplicationLicensing.Generator.Pages;
 using ApplicationLicensing.Generator.Enums;
-using ApplicationLicensing.Base.Tables;
+using ApplicationLicensing.Generator.Tables;
 using Microsoft.Sales.Customer;
 using Microsoft.Foundation.NoSeries;
 
@@ -12,7 +12,7 @@ using Microsoft.Foundation.NoSeries;
 /// Contains customer information, license timeline, and document control fields.
 /// Status flow: Open → Released → Expired/Archived
 /// </summary>
-table 80527 "Customer License Header"
+table 80528 "Customer License Header"
 {
     DataClassification = CustomerContent;
     Caption = 'Customer License Header';

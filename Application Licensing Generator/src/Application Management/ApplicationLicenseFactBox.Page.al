@@ -1,6 +1,5 @@
 namespace ApplicationLicensing.Generator.Pages;
 using ApplicationLicensing.Generator.Tables;
-using ApplicationLicensing.Generator.Enums;
 using ApplicationLicensing.Base.Tables;
 using ApplicationLicensing.Base.Pages;
 
@@ -8,7 +7,7 @@ using ApplicationLicensing.Base.Pages;
 /// Page Application License FactBox (ID 80505).
 /// FactBox showing license information for an application.
 /// </summary>
-page 80534 "Application License FactBox"
+page 80526 "Application License FactBox"
 {
     PageType = CardPart;
     SourceTable = "Application Registry";

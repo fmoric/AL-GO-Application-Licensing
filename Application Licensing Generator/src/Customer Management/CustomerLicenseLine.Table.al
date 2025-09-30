@@ -3,15 +3,17 @@ namespace ApplicationLicensing.Generator.Tables;
 using System.Security.AccessControl;
 using ApplicationLicensing.Generator.Pages;
 using ApplicationLicensing.Generator.Enums;
-using ApplicationLicensing.Base.Tables;
+using ApplicationLicensing.Generator.Tables;
+using ApplicationLicensing.Generator.Enums;
 using ApplicationLicensing.Base.Enums;
+using ApplicationLicensing.Base.Tables;
 
 /// <summary>
 /// Table Customer License Line (ID 80526).
 /// Lines table storing applications assigned to each customer following BC standard header/lines pattern.
 /// Contains application-specific license information linked to the Customer License Header.
 /// </summary>
-table 80528 "Customer License Line"
+table 80529 "Customer License Line"
 {
     DataClassification = CustomerContent;
     Caption = 'Customer License Line';

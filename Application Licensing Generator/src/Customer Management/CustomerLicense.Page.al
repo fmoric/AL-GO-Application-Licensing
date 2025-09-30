@@ -2,15 +2,15 @@ namespace ApplicationLicensing.Generator.Pages;
 
 using ApplicationLicensing.Generator.Tables;
 using ApplicationLicensing.Generator.Codeunit;
-using ApplicationLicensing.Base.Tables;
-using ApplicationLicensing.Base.Pages;
+using ApplicationLicensing.Generator.Tables;
+using ApplicationLicensing.Generator.Pages;
 
 /// <summary>
 /// Page Customer License Card (ID 80511).
 /// Card page for creating and editing customer license headers.
 /// Includes subpage for managing application lines.
 /// </summary>
-page 80530 "Customer License"
+page 80532 "Customer License"
 {
     PageType = Document;
     ApplicationArea = All;

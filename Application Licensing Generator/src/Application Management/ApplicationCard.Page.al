@@ -1,14 +1,14 @@
 namespace ApplicationLicensing.Generator.Pages;
 
 using ApplicationLicensing.Generator.Tables;
-using ApplicationLicensing.Base.Pages;
 using ApplicationLicensing.Base.Tables;
+using ApplicationLicensing.Base.Pages;
 
 /// <summary>
 /// Page Application Card (ID 80526).
 /// Card page for creating and editing application registrations.
 /// </summary>
-page 80526 "Application Card"
+page 80525 "Application Card"
 {
     PageType = Card;
     ApplicationArea = All;
@@ -24,7 +24,6 @@ page 80526 "Application Card"
                 Caption = 'General Information';
                 field("App ID"; Rec."App ID")
                 {
-                    Editable = IsNewRecord;
                 }
                 field("App Name"; Rec."App Name")
                 {
@@ -52,19 +51,19 @@ page 80526 "Application Card"
             {
                 Caption = 'Metadata';
                 Editable = false;
-                field("Created Date"; Rec."Created Date")
+                field("Created Date"; Rec.SystemCreatedAt)
                 {
 
                 }
-                field("Created By"; Rec."Created By")
+                field("Created By"; Rec.SystemCreatedBy)
                 {
 
                 }
-                field("Last Modified Date"; Rec."Last Modified Date")
+                field("Last Modified Date"; Rec.SystemModifiedAt)
                 {
 
                 }
-                field("Last Modified By"; Rec."Last Modified By")
+                field("Last Modified By"; Rec.SystemModifiedBy)
                 {
 
                 }
@@ -76,7 +75,6 @@ page 80526 "Application Card"
             {
 
                 SubPageLink = "App ID" = field("App ID");
-                Visible = not IsNewRecord;
             }
         }
     }
@@ -91,7 +89,6 @@ page 80526 "Application Card"
                 Caption = 'View Licenses';
                 Image = ViewDetails;
                 ToolTip = 'View all licenses for this application.';
-                Enabled = not IsNewRecord;
 
                 trigger OnAction()
                 var
@@ -106,43 +103,6 @@ page 80526 "Application Card"
                 end;
             }
         }
-        area(Navigation)
-        {
-            action(GenerateGuid)
-            {
 
-                Caption = 'Generate New GUID';
-                Image = New;
-                ToolTip = 'Generate a new unique identifier for the application.';
-                Enabled = IsNewRecord;
-
-                trigger OnAction()
-                begin
-                    Rec."App ID" := CreateGuid();
-                    CurrPage.Update(false);
-                end;
-            }
-        }
     }
-
-    var
-        IsNewRecord: Boolean;
-
-    trigger OnNewRecord(BelowxRec: Boolean)
-    begin
-        IsNewRecord := true;
-    end;
-
-    trigger OnAfterGetCurrRecord()
-    begin
-        IsNewRecord := IsNullGuid(Rec."App ID");
-    end;
-
-    /// <summary>
-    /// Sets the page in new record mode.
-    /// </summary>
-    procedure SetNewMode()
-    begin
-        IsNewRecord := true;
-    end;
 }

@@ -1,5 +1,6 @@
-namespace ApplicationLicensing.Base.Codeunit;
+namespace ApplicationLicensing.Generator.Codeunit;
 
+using ApplicationLicensing.Generator.Tables;
 using ApplicationLicensing.Base.Tables;
 
 /// <summary>
@@ -11,7 +12,7 @@ using ApplicationLicensing.Base.Tables;
 /// - Application validation
 /// - Application lookup functionality
 /// </summary>
-codeunit 80501 "Application Manager"
+codeunit 80525 "Application Manager"
 {
     /// <summary>
     /// Registers a new application in the system.

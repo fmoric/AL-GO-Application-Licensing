@@ -3,6 +3,7 @@ namespace ApplicationLicensing.Base.Tables;
 using System.Security.AccessControl;
 using ApplicationLicensing.Base.Pages;
 using ApplicationLicensing.Base.Enums;
+using System.Apps;
 
 /// <summary>
 /// Table License Registry (ID 80501).
@@ -12,7 +13,7 @@ using ApplicationLicensing.Base.Enums;
 /// for all license records, whether imported from external sources or created by
 /// the Generator Application.
 /// </summary>
-table 80501 "License Registry"
+table 80500 "License Registry"
 {
     DataClassification = SystemMetadata;
     Caption = 'License Registry';
@@ -31,14 +32,14 @@ table 80501 "License Registry"
         {
             Caption = 'Application ID';
             ToolTip = 'Unique identifier for the application.';
-            TableRelation = "Application Registry"."App ID";
+            TableRelation = "NAV App Installed App"."App ID";
             NotBlank = true;
         }
-        field(5; "App Name"; Text[100])
+        field(5; "App Name"; Text[250])
         {
             Caption = 'Application Name';
             ToolTip = 'Name of the registered application.';
-            CalcFormula = lookup("Application Registry"."App Name" where("App ID" = field("App ID")));
+            CalcFormula = lookup("NAV App Installed App".Name where("App ID" = field("App ID")));
             Editable = false;
             FieldClass = FlowField;
         }
@@ -144,37 +145,6 @@ table 80501 "License Registry"
     begin
         "Created Date" := CurrentDateTime();
         "Created By" := CopyStr(UserId(), 1, MaxStrLen("Created By"));
-    end;
-
-    /// <summary>
-    /// Validates the license content and dates.
-    /// </summary>
-    /// <returns>True if the license is valid.</returns>
-    procedure ValidateLicense(): Boolean
-    var
-        ApplicationRegistry: Record "Application Registry";
-    begin
-        // Check if application exists and is active
-        if not ApplicationRegistry.Get("App ID") then
-            exit(false);
-
-        if not ApplicationRegistry.Active then
-            exit(false);
-
-        // Check date validity
-        if ("Valid From" > Today()) or ("Valid To" < Today()) then begin
-            Status := Status::Expired;
-            exit(false);
-        end;
-
-        // Basic validation without signature checking
-        // Signature validation would be handled by License Validator codeunit
-        "Last Validated" := CurrentDateTime();
-        "Validation Result" := 'Valid';
-        Status := Status::Active;
-        Modify();
-
-        exit(true);
     end;
 
     /// <summary>

@@ -2,13 +2,14 @@ namespace ApplicationLicensing.Generator.Pages;
 
 using ApplicationLicensing.Generator.Tables;
 using ApplicationLicensing.Base.Tables;
+using ApplicationLicensing.Base.Pages;
 
 /// <summary>
 /// Page Customer License FactBox (ID 80514).
 /// FactBox showing customer license statistics and summary information.
 /// Displays information about a customer's licensed applications and their status.
 /// </summary>
-page 80531 "Customer License FactBox"
+page 80533 "Customer License FactBox"
 {
     PageType = CardPart;
     ApplicationArea = All;

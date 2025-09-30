@@ -7,7 +7,7 @@ using ApplicationLicensing.Base.Tables;
 /// Page License Registry (ID 80501).
 /// List page for viewing and managing imported licenses.
 /// </summary>
-page 80501 "License Registry"
+page 80500 "License Registry"
 {
     PageType = List;
     ApplicationArea = All;
@@ -74,51 +74,7 @@ page 80501 "License Registry"
     {
         area(Processing)
         {
-            action(ValidateLicense)
-            {
-                ApplicationArea = All;
-                Caption = 'Validate License';
-                Image = ValidateEmailLoggingSetup;
-                ToolTip = 'Validate the selected license.';
 
-                trigger OnAction()
-                var
-                    LicenseValidator: Codeunit "License Validator";
-                begin
-                    if LicenseValidator.ValidateCompleteLicense(Rec) then
-                        Message('License validation successful.')
-                    else
-                        Message('License validation failed: %1', Rec."Validation Result");
-                    CurrPage.Update(false);
-                end;
-            }
-            action(ValidateAllLicenses)
-            {
-                ApplicationArea = All;
-                Caption = 'Validate All Licenses';
-                Image = ValidateEmailLoggingSetup;
-                ToolTip = 'Validate all licenses in the registry.';
-
-                trigger OnAction()
-                var
-                    LicenseRegistry: Record "License Registry";
-                    LicenseValidator: Codeunit "License Validator";
-                    ValidCount: Integer;
-                    InvalidCount: Integer;
-                begin
-                    LicenseRegistry.SetRange(Status, LicenseRegistry.Status::Active);
-                    if LicenseRegistry.FindSet() then
-                        repeat
-                            if LicenseValidator.ValidateCompleteLicense(LicenseRegistry) then
-                                ValidCount += 1
-                            else
-                                InvalidCount += 1;
-                        until LicenseRegistry.Next() = 0;
-
-                    Message('Validation complete.\\Valid: %1\\Invalid: %2', ValidCount, InvalidCount);
-                    CurrPage.Update(false);
-                end;
-            }
             action(ImportLicense)
             {
                 ApplicationArea = All;
@@ -152,17 +108,18 @@ page 80501 "License Registry"
                 end;
             }
         }
-        area(Navigation)
-        {
-            action(ApplicationRegistry)
-            {
-                ApplicationArea = All;
-                Caption = 'Application Registry';
-                Image = ApplicationWorksheet;
-                ToolTip = 'Open the Application Registry to manage registered applications.';
-                RunObject = page "Application Registry";
-            }
-        }
+        //TODO Move this to generator as page extension
+        // area(Navigation)
+        // {
+        //     action(ApplicationRegistry)
+        //     {
+        //         ApplicationArea = All;
+        //         Caption = 'Application Registry';
+        //         Image = ApplicationWorksheet;
+        //         ToolTip = 'Open the Application Registry to manage registered applications.';
+        //         RunObject = page "Application Registry";
+        //     }
+        // }
     }
 
     var

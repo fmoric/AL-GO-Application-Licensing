@@ -1,16 +1,18 @@
 namespace ApplicationLicensing.Generator.Codeunit;
 
 using System.Reflection;
-using ApplicationLicensing.Base.Codeunit;
-using ApplicationLicensing.Base.Tables;
+using ApplicationLicensing.Generator.Codeunit;
+using ApplicationLicensing.Generator.Tables;
 using ApplicationLicensing.Generator.Tables;
 using ApplicationLicensing.Generator.Enums;
+using ApplicationLicensing.Generator.Enums;
+using ApplicationLicensing.Base.Tables;
 
 /// <summary>
 /// Codeunit License Management (ID 80503).
 /// Main coordinator for all licensing operations and CLI interface.
 /// </summary>
-codeunit 80528 "License Management"
+codeunit 80529 "License Management"
 {
     Permissions = tabledata "Application Registry" = r,
                   tabledata "License Registry" = r,
@@ -81,7 +83,7 @@ codeunit 80528 "License Management"
                                        ApplicationRegistry.Publisher,
                                        ApplicationRegistry.Version,
                                        ApplicationRegistry.Active,
-                                       ApplicationRegistry."Created Date");
+                                       ApplicationRegistry.SystemCreatedAt);
             until ApplicationRegistry.Next() = 0
         else
             OutputText += NoApplicationsRegisteredLbl;

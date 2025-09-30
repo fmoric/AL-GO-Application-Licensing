@@ -47,65 +47,6 @@ codeunit 80500 "License Validator"
     end;
 
     /// <summary>
-    /// Validates the complete license including dates, application, and signature.
-    /// </summary>
-    /// <param name="LicenseRegistry">The license record to validate.</param>
-    /// <returns>True if the license passes all validation checks.</returns>
-    procedure ValidateCompleteLicense(var LicenseRegistry: Record "License Registry"): Boolean
-    var
-        ApplicationRegistry: Record "Application Registry";
-        IsValid: Boolean;
-    begin
-        IsValid := true;
-
-        // Check if application exists
-        if not ApplicationRegistry.Get(LicenseRegistry."App ID") then begin
-            LicenseRegistry."Validation Result" := 'Application not found';
-            IsValid := false;
-        end;
-
-        // Check if application is active
-        if IsValid and not ApplicationRegistry.Active then begin
-            LicenseRegistry."Validation Result" := 'Application is not active';
-            IsValid := false;
-        end;
-
-        // Check date validity
-        if IsValid and (LicenseRegistry."Valid From" > LicenseRegistry."Valid To") then begin
-            LicenseRegistry."Validation Result" := 'Invalid date range';
-            IsValid := false;
-        end;
-
-        // Check if license has expired
-        if IsValid and (LicenseRegistry."Valid To" < Today()) then begin
-            LicenseRegistry.Status := LicenseRegistry.Status::Expired;
-            LicenseRegistry."Validation Result" := 'License expired';
-        end else if IsValid and (LicenseRegistry."Valid From" > Today()) then begin
-            LicenseRegistry.Status := LicenseRegistry.Status::Suspended;
-            LicenseRegistry."Validation Result" := 'License not yet valid';
-        end;
-
-        // Validate signature
-        if IsValid and not ValidateSignature(LicenseRegistry) then begin
-            LicenseRegistry."Validation Result" := 'Invalid signature';
-            LicenseRegistry.Status := LicenseRegistry.Status::Invalid;
-            IsValid := false;
-        end;
-
-        // Update validation timestamp
-        LicenseRegistry."Last Validated" := CurrentDateTime();
-
-        if IsValid then begin
-            LicenseRegistry."Validation Result" := 'Valid';
-            if LicenseRegistry.Status <> LicenseRegistry.Status::Expired then
-                LicenseRegistry.Status := LicenseRegistry.Status::Active;
-        end;
-
-        LicenseRegistry.Modify();
-        exit(IsValid);
-    end;
-
-    /// <summary>
     /// Checks if a signature has the correct format.
     /// </summary>
     /// <param name="Signature">The signature string to validate.</param>
@@ -117,7 +58,7 @@ codeunit 80500 "License Validator"
             exit(false);
 
         // Check for common signature prefixes
-        if Signature.StartsWith('RSA-') or 
+        if Signature.StartsWith('RSA-') or
            Signature.StartsWith('SHA256-') or
            Signature.StartsWith('-----BEGIN') then
             exit(true);

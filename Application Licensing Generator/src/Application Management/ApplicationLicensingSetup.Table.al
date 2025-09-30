@@ -6,7 +6,7 @@ using Microsoft.Foundation.NoSeries;
 /// Table Application Licensing Setup (ID 80521).
 /// Setup table for Application Licensing extension containing number series and configuration.
 /// </summary>
-table 80530 "Application Licensing Setup"
+table 80525 "Application Licensing Setup"
 {
     DataClassification = SystemMetadata;
     Caption = 'Application Licensing Setup';

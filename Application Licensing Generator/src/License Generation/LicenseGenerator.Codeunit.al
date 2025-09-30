@@ -1,9 +1,10 @@
 namespace ApplicationLicensing.Generator.Codeunit;
 
-using ApplicationLicensing.Base.Tables;      // Access Base Application tables
+using ApplicationLicensing.Generator.Tables;      // Access Base Application tables
 using ApplicationLicensing.Generator.Tables;
 using System.Security.Encryption;
 using System.Utilities;
+using ApplicationLicensing.Base.Tables;
 
 /// <summary>
 /// Codeunit License Generator (ID 80526).
@@ -14,7 +15,7 @@ using System.Utilities;
 /// 2. Licenses are stored in Base Application License Registry
 /// 3. Base Application handles validation and management
 /// </summary>
-codeunit 80527 "License Generator"
+codeunit 80528 "License Generator"
 {
     /// <summary>
     /// Generates a new license and stores it in the Base Application.
@@ -53,7 +54,7 @@ codeunit 80527 "License Generator"
         // Generate license content
         LicenseId := CreateGuid();
         LicenseContent := CreateLicenseContent(LicenseId, AppId, ApplicationRegistry."App Name", CustomerName, ValidFrom, ValidTo, Features);
-        
+
         // Generate digital signature
         DigitalSignature := CreateDigitalSignature(LicenseContent, KeyId);
 
@@ -90,12 +91,12 @@ codeunit 80527 "License Generator"
         CryptoKeyStorage.SetRange("Key Type", CryptoKeyStorage."Key Type"::"Signing Key");
         CryptoKeyStorage.SetRange(Active, true);
         CryptoKeyStorage.SetFilter("Expires Date", '>=%1|%2', Today(), 0D);
-        
+
         if CryptoKeyStorage.FindFirst() then begin
             KeyId := CryptoKeyStorage."Key ID";
             exit(true);
         end;
-        
+
         exit(false);
     end;
 
@@ -106,7 +107,7 @@ codeunit 80527 "License Generator"
     begin
         exit(StrSubstNo('LICENSE-V1.0|ID:%1|APP-ID:%2|APP-NAME:%3|CUSTOMER:%4|VALID-FROM:%5|VALID-TO:%6|FEATURES:%7|ISSUED:%8',
             LicenseId,
-            AppId, 
+            AppId,
             AppName,
             CustomerName,
             Format(ValidFrom, 0, '<Year4>-<Month,2>-<Day,2>'),
@@ -132,7 +133,7 @@ codeunit 80527 "License Generator"
         // In production, this would use proper RSA signing
         ContentHash := GetContentHash(Content);
         Timestamp := Format(CurrentDateTime(), 0, '<Year4><Month,2><Day,2><Hours24,2><Minutes,2><Seconds,2>');
-        
+
         exit(StrSubstNo('RSA-SIGNATURE:%1-%2-%3', ContentHash, KeyId, Timestamp));
     end;
 
@@ -154,9 +155,9 @@ codeunit 80527 "License Generator"
         LicenseOutStream: OutStream;
         CompleteFile: Text;
     begin
-        CompleteFile := '--- BEGIN LICENSE ---' + 
+        CompleteFile := '--- BEGIN LICENSE ---' +
                        '\n' + LicenseContent +
-                       '\n--- BEGIN SIGNATURE ---' + 
+                       '\n--- BEGIN SIGNATURE ---' +
                        '\n' + DigitalSignature +
                        '\n--- END LICENSE ---';
 

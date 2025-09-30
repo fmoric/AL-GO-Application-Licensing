@@ -31,9 +31,57 @@ using ApplicationLicensing.Generator.Enums;
 /// 3. Retrieve keys: Use GetActiveSigningKey() for license operations
 /// 4. Validate certificates: Use ValidateCertificate() before importing
 /// </summary>
-codeunit 80525 "Crypto Key Manager"
+codeunit 80526 "Crypto Key Manager"
 {
     Permissions = tabledata "Crypto Key Storage" = rim;
+    internal procedure UploadPublicKey(var CryptoStorageTable: Record "Crypto Key Storage")
+    var
+        FileMgt: Codeunit "File Management";
+        TempBlob: Codeunit "Temp Blob";
+        CertExtFilterTxt: Label 'pem', Locked = true;
+        CertFileFilterTxt: Label 'PEM Files (*.pem)|*.pem';
+        KeyIdDateFormatLbl: Label '<Year4><Month,2><Day,2><Hours24><Minutes,2>', Locked = true;
+        KeyIdFormatLbl: Label 'Public-%1', Locked = true;
+        SelectFileTxt: Label 'Select a public key file';
+        InStr: InStream;
+        OutStr: OutStream;
+        FilePath: Text;
+    begin
+        // Generate Key ID if not provided
+        if CryptoStorageTable."Key ID" = '' then
+            CryptoStorageTable."Key ID" := CopyStr(StrSubstNo(KeyIdFormatLbl, Format(CurrentDateTime(), 0, KeyIdDateFormatLbl)), 1, 20);
+
+        // Set default values if not specified
+        CryptoStorageTable."Key Type" := CryptoStorageTable."Key Type"::"Validation Key";
+        if CryptoStorageTable."Expires Date" = 0D then
+            CryptoStorageTable."Expires Date" := CalcDate('<+5Y>', Today());
+        CryptoStorageTable.Active := true;
+        CryptoStorageTable.Algorithm := 'Public Key';
+        CryptoStorageTable."Imported Certificate" := false;
+        //Select and upload cert
+        TempBlob.CreateInStream(InStr, TextEncoding::UTF8);
+        FilePath := FileMgt.BLOBImportWithFilter(TempBlob, SelectFileTxt, '', CertFileFilterTxt, CertExtFilterTxt);
+        if FilePath = '' then
+            exit;
+
+        CryptoStorageTable."Public Key".CreateOutStream(OutStr);
+        CopyStream(OutStr, InStr);
+        CryptoStorageTable.Insert(true);
+    end;
+
+    internal procedure DownloadPublicKey(var CryptoStorageTable: Record "Crypto Key Storage")
+    var
+        TextLine, TextAll : Text;
+        InStr: InStream;
+        ToFile: Text;
+    begin
+        // Implementation for downloading the public key
+        CryptoStorageTable.CalcFields("Public Key");
+        CryptoStorageTable."Public Key".CreateInStream(InStr);
+
+        ToFile := 'PublicKey-' + CryptoStorageTable."Key ID" + '.pem';
+        DownloadFromStream(InStr, 'Download public key', '', '', ToFile);
+    end;
     /// <summary>
     /// Uploads and validates a .p12 certificate file.
     /// </summary>

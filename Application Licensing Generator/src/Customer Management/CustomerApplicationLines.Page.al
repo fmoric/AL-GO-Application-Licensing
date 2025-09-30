@@ -2,14 +2,15 @@ namespace ApplicationLicensing.Generator.Pages;
 
 using ApplicationLicensing.Generator.Tables;
 using ApplicationLicensing.Generator.Codeunit;
-using ApplicationLicensing.Base.Tables;
+using ApplicationLicensing.Generator.Tables;
+using ApplicationLicensing.Generator.Pages;
 
 /// <summary>
 /// Page Customer Application Lines (ID 80535).
 /// Subpage for managing application lines within a customer license.
 /// Used in the Customer License Card to display and edit licensed applications.
 /// </summary>
-page 80528 "Customer Application Lines"
+page 80530 "Customer Application Lines"
 {
     PageType = ListPart;
     ApplicationArea = All;

@@ -15,7 +15,7 @@ using System.Utilities;
 /// - Parse and validate license content
 /// - Store licenses in the License Registry
 /// </summary>
-page 80502 "License Import"
+page 80501 "License Import"
 {
     PageType = Card;
     ApplicationArea = All;
@@ -123,7 +123,6 @@ page 80502 "License Import"
 
                 trigger OnAction()
                 begin
-                    ImportParsedLicense();
                 end;
             }
             action(ClearData)
@@ -196,27 +195,7 @@ page 80502 "License Import"
         InStream: InStream;
         FileName: Text;
     begin
-        // Clear previous data
-        ClearImportData();
-
-        // Upload file
-        if not UploadIntoStream(ImportLicenseDialogLbl, '', ImportLicenseFileFilterLbl, FileName, InStream) then
-            exit;
-
-        // Read file content
-        InStream.ReadText(LicenseFileContent);
-
-        // Parse the license file
-        if ParseLicenseFile() then begin
-            ShowParsedData := true;
-            ValidationStatus := 'License parsed successfully';
-            ValidationSuccess := ValidateParsedLicense();
-            CanImport := true;
-        end else begin
-            Error(InvalidLicenseFormatErr);
-        end;
-
-        CurrPage.Update(false);
+        //TODO upload and validate license
     end;
 
     /// <summary>
@@ -285,66 +264,7 @@ page 80502 "License Import"
         end;
     end;
 
-    /// <summary>
-    /// Validates the parsed license data.
-    /// </summary>
-    /// <returns>True if validation passed.</returns>
-    local procedure ValidateParsedLicense(): Boolean
-    var
-        ApplicationRegistry: Record "Application Registry";
-    begin
-        // Check if application is registered
-        if not ApplicationRegistry.Get(ParsedAppId) then begin
-            Message(ApplicationNotFoundWarningMsg, ParsedAppName, ParsedAppId);
-            exit(false);
-        end;
 
-        // Check date validity
-        if ParsedValidFrom >= ParsedValidTo then
-            exit(false);
-
-        exit(true);
-    end;
-
-    /// <summary>
-    /// Imports the parsed license into the license registry.
-    /// </summary>
-    local procedure ImportParsedLicense()
-    var
-        LicenseRegistry: Record "License Registry";
-        LicenseOutStream: OutStream;
-    begin
-        // Check if license already exists
-        if LicenseRegistry.Get(ParsedLicenseId) then
-            Error(LicenseAlreadyExistsErr, ParsedLicenseId);
-
-        // Warn if validation failed but allow import
-        if not ValidationSuccess then
-            if not Confirm(ConfirmImportInvalidLicenseQst, false) then
-                exit;
-
-        // Create license registry entry
-        LicenseRegistry.Init();
-        LicenseRegistry."License ID" := ParsedLicenseId;
-        LicenseRegistry."App ID" := ParsedAppId;
-        LicenseRegistry."Customer Name" := ParsedCustomerName;
-        LicenseRegistry."Valid From" := ParsedValidFrom;
-        LicenseRegistry."Valid To" := ParsedValidTo;
-        LicenseRegistry.Features := ParsedFeatures;
-        LicenseRegistry."Digital Signature" := ParsedSignature;
-        LicenseRegistry.Status := LicenseRegistry.Status::Active;
-
-        // Store original license file as blob
-        LicenseRegistry."License File".CreateOutStream(LicenseOutStream);
-        LicenseOutStream.WriteText(LicenseFileContent);
-
-        if LicenseRegistry.Insert(true) then begin
-            // Validate the imported license
-            LicenseValidator.ValidateCompleteLicense(LicenseRegistry);
-            Message(LicenseImportedSuccessMsg, ParsedLicenseId);
-            CurrPage.Close();
-        end;
-    end;
 
     /// <summary>
     /// Clears all imported data and resets the form.

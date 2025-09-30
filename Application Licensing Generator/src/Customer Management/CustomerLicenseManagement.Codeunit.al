@@ -1,6 +1,7 @@
 namespace ApplicationLicensing.Generator.Codeunit;
 
 using ApplicationLicensing.Generator.Tables;
+using ApplicationLicensing.Generator.Tables;
 using ApplicationLicensing.Base.Tables;
 
 /// <summary>
@@ -8,7 +9,7 @@ using ApplicationLicensing.Base.Tables;
 /// Manages customer license operations following BC standard header/lines pattern.
 /// Provides functionality for bulk operations on customer licenses and applications.
 /// </summary>
-codeunit 80526 "Customer License Management"
+codeunit 80527 "Customer License Management"
 {
     Permissions = tabledata "Customer License Header" = rimd,
                   tabledata "Customer License Line" = rimd,

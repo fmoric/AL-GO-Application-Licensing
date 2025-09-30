@@ -25,6 +25,14 @@
     "allowDownloadingSource": true,
     "includeSourceInSymbolFile": true
   },  
+  "internalsVisibleTo": [
+    {
+      "id": "3b9f1067-5337-4f39-b645-93afa31c5995",
+      "publisher": "BE-terna",
+      "name": "Application Licensing Generator"
+
+    }
+  ],
   "contextSensitiveHelpUrl": "https://docs.microsoft.com/dynamics365/business-central/",  
   "runtime": "15.0",
   "features": [

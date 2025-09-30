@@ -2,13 +2,13 @@ namespace ApplicationLicensing.Generator.Pages;
 
 using ApplicationLicensing.Generator.Tables;
 using Microsoft.Foundation.NoSeries;
-using ApplicationLicensing.Base.Pages;
+using ApplicationLicensing.Generator.Pages;
 
 /// <summary>
 /// Page Application Licensing Setup (ID 80540).
 /// Setup page for configuring Application Licensing extension settings.
 /// </summary>
-page 80540 "Application Licensing Setup"
+page 80527 "Application Licensing Setup"
 {
     PageType = Card;
     ApplicationArea = All;

@@ -1,4 +1,4 @@
 {
-    "mandatoryAffixes": ["BET"],
+    "mandatoryAffixes": ["LicGenBET"],
     "supportedCountries": ["US", "GB", "DE", "FR", "AT", "CH", "NL", "BE", "DK", "NO", "SE", "FI"]
 }

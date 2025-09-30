@@ -1,18 +1,22 @@
-namespace ApplicationLicensing.Base.Pages;
+namespace ApplicationLicensing.Generator.Pages;
 
+using ApplicationLicensing.Generator.Tables;
 using ApplicationLicensing.Base.Tables;
+using ApplicationLicensing.Base.Pages;
 
 /// <summary>
 /// Page Application Registry (ID 80500).
 /// List page for managing registered applications.
 /// </summary>
-page 80500 "Application Registry"
+page 80528 "Application Registry"
 {
     PageType = List;
     ApplicationArea = All;
     UsageCategory = Lists;
     SourceTable = "Application Registry";
     Caption = 'Application Registry';
+    Editable = false;
+    CardPageId = "Application Card";
 
     layout
     {
@@ -44,11 +48,11 @@ page 80500 "Application Registry"
                 {
                     ApplicationArea = All;
                 }
-                field("Created Date"; Rec."Created Date")
+                field("Created Date"; Rec.SystemCreatedAt)
                 {
                     ApplicationArea = All;
                 }
-                field("Created By"; Rec."Created By")
+                field("Created By"; Rec.SystemCreatedBy)
                 {
                     ApplicationArea = All;
                 }

@@ -2,7 +2,8 @@ namespace ApplicationLicensing.Generator.Pages;
 
 using ApplicationLicensing.Generator.Tables;
 using ApplicationLicensing.Generator.Codeunit;
-using ApplicationLicensing.Base.Tables;
+using ApplicationLicensing.Generator.Tables;
+using ApplicationLicensing.Generator.Pages;
 using ApplicationLicensing.Base.Pages;
 
 /// <summary>
@@ -10,7 +11,7 @@ using ApplicationLicensing.Base.Pages;
 /// List page for managing customer licenses following BC standard header/lines pattern.
 /// Displays customer license headers with drill-down to application lines.
 /// </summary>
-page 80532 "Customer License List"
+page 80534 "Customer License List"
 {
     PageType = List;
     ApplicationArea = All;

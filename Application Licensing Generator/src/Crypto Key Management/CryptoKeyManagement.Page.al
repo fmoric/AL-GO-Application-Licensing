@@ -8,7 +8,7 @@ using ApplicationLicensing.Generator.Enums;
 /// Page Crypto Key Management (ID 80506).
 /// List page for managing cryptographic keys.
 /// </summary>
-page 80527 "Crypto Key Management"
+page 80529 "Crypto Key Management"
 {
     PageType = List;
 
@@ -16,6 +16,7 @@ page 80527 "Crypto Key Management"
     SourceTable = "Crypto Key Storage";
     Caption = 'Cryptographic Key Management';
     ApplicationArea = All;
+    DelayedInsert = true;
     layout
     {
         area(Content)
@@ -62,128 +63,28 @@ page 80527 "Crypto Key Management"
     {
         area(Processing)
         {
-            action(GenerateSigningKey)
+            action(ImportPublicKey)
             {
-
-                Caption = 'Generate Signing Key';
-                Image = EncryptionKeys;
-                ToolTip = 'Generate a new RSA signing key.';
-
-                trigger OnAction()
-                var
-                    CryptoKeyManager: Codeunit "Crypto Key Manager";
-                    KeyId: Text;
-                    ExpirationDate: Date;
-                begin
-                    KeyId := StrSubstNo(KeyIdSigningFormatLbl, Format(CurrentDateTime(), 0, KeyIdDateFormatLbl));
-                    ExpirationDate := CalcDate('<+5Y>', Today());
-
-                    if CryptoKeyManager.GenerateKeyPair(CopyStr(KeyId, 1, 20), "Crypto Key Type"::"Signing Key", ExpirationDate) then begin
-                        Message(SigningKeyGeneratedMsg, KeyId);
-                        CurrPage.Update(false);
-                    end else
-                        Error(FailedGenerateSigningKeyErr);
-                end;
-            }
-            action(UploadCertificate)
-            {
-
-                Caption = 'Upload Certificate';
+                Caption = 'Import Public Key';
+                ApplicationArea = All;
                 Image = Import;
-                ToolTip = 'Directly upload and save a .p12 certificate file with automatic key generation.';
-                Promoted = true;
-                PromotedCategory = Process;
-                PromotedIsBig = true;
-
-                trigger OnAction()
-                var
-                    NewCryptoKeyStorage: Record "Crypto Key Storage";
-                    CryptoKeyManager: Codeunit "Crypto Key Manager";
-                begin
-                    CryptoKeyManager.UploadAndValidateCertificate(NewCryptoKeyStorage);
-                end;
-            }
-            action(GenerateValidationKey)
-            {
-
-                Caption = 'Generate Validation Key';
-                Image = EncryptionKeys;
-                ToolTip = 'Generate a new RSA validation key.';
-
-                trigger OnAction()
-                var
-                    CryptoKeyManager: Codeunit "Crypto Key Manager";
-                    KeyId: Text;
-                    ExpirationDate: Date;
-                begin
-                    KeyId := StrSubstNo(KeyIdValidationFormatLbl, Format(CurrentDateTime(), 0, KeyIdDateFormatLbl));
-                    ExpirationDate := CalcDate('<+5Y>', Today());
-
-                    if CryptoKeyManager.GenerateKeyPair(CopyStr(KeyId, 1, 20), "Crypto Key Type"::"Validation Key", ExpirationDate) then begin
-                        Message(ValidationKeyGeneratedMsg, KeyId);
-                        CurrPage.Update(false);
-                    end else
-                        Error(FailedGenerateValidationKeyErr);
-                end;
-            }
-            action(DeactivateKey)
-            {
-
-                Caption = 'Deactivate Key';
-                Image = Cancel;
-                ToolTip = 'Deactivate the selected key.';
-                Enabled = Rec.Active;
-
+                ToolTip = 'Import an existing public key certificate.';
                 trigger OnAction()
                 var
                     CryptoKeyManager: Codeunit "Crypto Key Manager";
                 begin
-                    if not Confirm(ConfirmDeactivateKeyQst, false, Rec."Key ID") then
-                        exit;
-
-                    if CryptoKeyManager.DeactivateKey(Rec."Key ID") then
-                        Message(KeyDeactivatedSuccessMsg)
-                    else
-                        Error(FailedDeactivateKeyErr);
-
-                    CurrPage.Update(false);
+                    CryptoKeyManager.UploadPublicKey(Rec);
                 end;
             }
+
         }
-        area(Navigation)
+        area(Promoted)
         {
-            action(CheckSystemStatus)
+            group(Category_Process)
             {
-
-                Caption = 'Check System Status';
-                Image = Status;
-                ToolTip = 'Check the status of the cryptographic system.';
-
-                trigger OnAction()
-                var
-                    CryptoKeyManager: Codeunit "Crypto Key Manager";
-                    StatusMessage: Text;
-                begin
-                    StatusMessage := CryptoSystemStatusLbl + NewLine() + NewLine();
-
-                    if CryptoKeyManager.IsSigningKeyAvailable() then
-                        StatusMessage += SigningKeyAvailableLbl + NewLine()
-                    else
-                        StatusMessage += SigningKeyNotAvailableLbl + NewLine();
-
-                    StatusMessage += StrSubstNo(TotalKeysLbl, Rec.Count()) + NewLine();
-
-                    Rec.SetRange(Active, true);
-                    StatusMessage += StrSubstNo(ActiveKeysLbl, Rec.Count()) + NewLine();
-
-                    Rec.SetRange(Active);
-                    Rec.SetRange("Key Type", Rec."Key Type"::"Signing Key");
-                    StatusMessage += StrSubstNo(SigningKeysLbl, Rec.Count()) + NewLine();
-
-                    Message(StatusMessage);
-                    Rec.SetRange("Key Type");
-                    CurrPage.Update(false);
-                end;
+                actionref(ImportPublicKey_Promoted; ImportPublicKey)
+                {
+                }
             }
         }
     }
@@ -193,13 +94,6 @@ page 80527 "Crypto Key Management"
             ValidToExpr := Format(PageStyle::Unfavorable)
         else
             ValidToExpr := Format(PageStyle::None);
-    end;
-
-    local procedure NewLine(): Text
-    var
-        TypeHelper: Codeunit "Type Helper";
-    begin
-        exit(TypeHelper.NewLine());
     end;
 
     var

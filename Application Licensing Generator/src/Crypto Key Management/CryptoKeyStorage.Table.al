@@ -4,10 +4,10 @@ using ApplicationLicensing.Generator.Enums;
 using System.Security.AccessControl;
 
 /// <summary>
-/// Table Crypto Key Storage (ID 80526).
+/// Table Crypto Key Storage (ID 80502).
 /// Stores RSA public/private key pairs for license signing and validation.
 /// </summary>
-table 80526 "Crypto Key Storage"
+table 80527 "Crypto Key Storage"
 {
     DataClassification = SystemMetadata;
     Caption = 'Cryptographic Key Storage';
