@@ -3,8 +3,6 @@ namespace ApplicationLicensing.Generator.Tables;
 using System.Security.AccessControl;
 using ApplicationLicensing.Generator.Pages;
 using ApplicationLicensing.Generator.Enums;
-using ApplicationLicensing.Generator.Tables;
-using ApplicationLicensing.Generator.Enums;
 using ApplicationLicensing.Base.Enums;
 using ApplicationLicensing.Base.Tables;
 

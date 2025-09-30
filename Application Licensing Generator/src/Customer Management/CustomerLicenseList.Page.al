@@ -63,7 +63,7 @@ page 80534 "Customer License List"
                     ToolTip = 'Specifies the number of applications licensed.';
                     BlankZero = true;
                 }
-                field("Created Date"; Rec."Created Date")
+                field("Created Date"; Rec.SystemCreatedAt)
                 {
                     ToolTip = 'Specifies when the customer was created.';
                 }

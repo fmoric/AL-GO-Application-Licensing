@@ -2,7 +2,6 @@ namespace ApplicationLicensing.Generator.Tables;
 
 using ApplicationLicensing.Generator.Pages;
 using ApplicationLicensing.Generator.Enums;
-using ApplicationLicensing.Generator.Tables;
 using Microsoft.Sales.Customer;
 using Microsoft.Foundation.NoSeries;
 
@@ -114,6 +113,14 @@ table 80528 "Customer License Header"
                     end;
             end;
         }
+        field(13; "No. of Applications"; Integer)
+        {
+            Caption = 'No. of Applications';
+            ToolTip = 'Specifies the number of application lines in this document.';
+            Editable = false;
+            CalcFormula = count("Customer License Line" where("Document No." = field("No."), Type = const(Application)));
+            FieldClass = FlowField;
+        }
         field(15; "No. Series"; Code[20])
         {
             Caption = 'No. Series';
@@ -162,68 +169,6 @@ table 80528 "Customer License Header"
             Caption = 'Country/Region Code';
             ToolTip = 'Specifies the customer country/region.';
         }
-        field(40; "No. of Lines"; Integer)
-        {
-            Caption = 'No. of Lines';
-            ToolTip = 'Specifies the number of license lines in this document.';
-            CalcFormula = count("Customer License Line" where("Document No." = field("No.")));
-            Editable = false;
-            FieldClass = FlowField;
-        }
-        field(41; "No. of Applications"; Integer)
-        {
-            Caption = 'No. of Applications';
-            ToolTip = 'Specifies the number of applications licensed in this document.';
-            CalcFormula = count("Customer License Line" where("Document No." = field("No."), Type = const(Application)));
-            Editable = false;
-            FieldClass = FlowField;
-        }
-        field(50; "External Document No."; Code[35])
-        {
-            Caption = 'External Document No.';
-            ToolTip = 'Specifies the external document number, such as a purchase order number from the customer.';
-        }
-        field(51; "Your Reference"; Text[35])
-        {
-            Caption = 'Your Reference';
-            ToolTip = 'Specifies the customer reference for this license document.';
-        }
-        field(60; "Salesperson Code"; Code[20])
-        {
-            Caption = 'Salesperson Code';
-            ToolTip = 'Specifies the code for the salesperson responsible for this license.';
-        }
-        field(61; "Responsibility Center"; Code[10])
-        {
-            Caption = 'Responsibility Center';
-            ToolTip = 'Specifies the responsibility center for this license document.';
-        }
-        field(70; "Created Date"; DateTime)
-        {
-            Caption = 'Created Date';
-            ToolTip = 'Specifies when the license document was created.';
-            Editable = false;
-        }
-        field(71; "Created By"; Code[50])
-        {
-            Caption = 'Created By';
-            ToolTip = 'Specifies who created the license document.';
-            DataClassification = EndUserIdentifiableInformation;
-            Editable = false;
-        }
-        field(72; "Last Modified Date"; DateTime)
-        {
-            Caption = 'Last Modified Date';
-            ToolTip = 'Specifies when the license document was last modified.';
-            Editable = false;
-        }
-        field(73; "Last Modified By"; Code[50])
-        {
-            Caption = 'Last Modified By';
-            ToolTip = 'Specifies who last modified the license document.';
-            DataClassification = EndUserIdentifiableInformation;
-            Editable = false;
-        }
         field(80; "Released Date"; DateTime)
         {
             Caption = 'Released Date';
@@ -241,11 +186,6 @@ table 80528 "Customer License Header"
         {
             Caption = 'Description';
             ToolTip = 'Specifies a description for this license document.';
-        }
-        field(91; Comment; Text[250])
-        {
-            Caption = 'Comment';
-            ToolTip = 'Specifies additional comments for this license document.';
         }
     }
 
@@ -274,17 +214,11 @@ table 80528 "Customer License Header"
     trigger OnInsert()
     begin
         InitializeDocument();
-        "Created Date" := CurrentDateTime();
-        "Created By" := CopyStr(UserId(), 1, MaxStrLen("Created By"));
-        "Last Modified Date" := "Created Date";
-        "Last Modified By" := "Created By";
     end;
 
     trigger OnModify()
     begin
         TestStatusOpen();
-        "Last Modified Date" := CurrentDateTime();
-        "Last Modified By" := CopyStr(UserId(), 1, MaxStrLen("Last Modified By"));
     end;
 
     trigger OnDelete()

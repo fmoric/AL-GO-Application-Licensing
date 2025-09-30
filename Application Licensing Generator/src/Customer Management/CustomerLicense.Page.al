@@ -2,8 +2,6 @@ namespace ApplicationLicensing.Generator.Pages;
 
 using ApplicationLicensing.Generator.Tables;
 using ApplicationLicensing.Generator.Codeunit;
-using ApplicationLicensing.Generator.Tables;
-using ApplicationLicensing.Generator.Pages;
 
 /// <summary>
 /// Page Customer License Card (ID 80511).
@@ -116,19 +114,19 @@ page 80532 "Customer License"
             group(Metadata)
             {
                 Caption = 'Record Information';
-                field("Created Date"; Rec."Created Date")
+                field("Created Date"; Rec.SystemCreatedAt)
                 {
                     Editable = false;
                 }
-                field("Created By"; Rec."Created By")
+                field("Created By"; Rec.SystemCreatedBy)
                 {
                     Editable = false;
                 }
-                field("Last Modified Date"; Rec."Last Modified Date")
+                field("Last Modified Date"; Rec.SystemModifiedAt)
                 {
                     Editable = false;
                 }
-                field("Last Modified By"; Rec."Last Modified By")
+                field("Last Modified By"; Rec.SystemModifiedBy)
                 {
                     Editable = false;
                 }
